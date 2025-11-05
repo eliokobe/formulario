@@ -1,0 +1,40 @@
+name: contacto-app
+services:
+- name: web
+  source_dir: /
+  github:
+    repo: eliokobe/contacto
+    branch: main
+  run_command: npm start
+  environment_slug: node-js
+  instance_count: 1
+  instance_size_slug: basic-xxs
+  build_command: npm run build
+  http_port: 3000
+  routes:
+  - path: /
+  health_check:
+    http_path: /
+    initial_delay_seconds: 30
+    period_seconds: 10
+    timeout_seconds: 5
+    success_threshold: 1
+    failure_threshold: 3
+  envs:
+  - key: NODE_ENV
+    value: production
+  - key: PORT
+    value: "3000"
+  # Add your environment variables here:
+  # - key: AIRTABLE_TOKEN
+  #   value: YOUR_AIRTABLE_TOKEN
+  # - key: AIRTABLE_BASE_ID
+  #   value: YOUR_AIRTABLE_BASE_ID
+  # - key: AIRTABLE_TABLE_NAME
+  #   value: YOUR_AIRTABLE_TABLE_NAME
+  # - key: AIRTABLE_TABLE_CLIENTES
+  #   value: YOUR_AIRTABLE_TABLE_CLIENTES
+  # - key: UPLOADTHING_SECRET
+  #   value: YOUR_UPLOADTHING_SECRET
+  # - key: UPLOADTHING_APP_ID
+  #   value: YOUR_UPLOADTHING_APP_ID
