@@ -16,14 +16,15 @@ export async function POST(request: NextRequest) {
       problemaSolucionado, 
       accionRealizada, 
       problemaDescripcion,
+      detallesTrabajo,
       fotoReparacion,
       facturaServicio 
     } = body;
 
     // Validation
-    if (!problemaSolucionado || !accionRealizada || !problemaDescripcion) {
+    if (!problemaSolucionado || !accionRealizada || !problemaDescripcion || !detallesTrabajo) {
       return NextResponse.json(
-        { error: 'Faltan campos requeridos: problemaSolucionado, accionRealizada y problemaDescripcion son obligatorios' },
+        { error: 'Faltan campos requeridos: problemaSolucionado, accionRealizada, problemaDescripcion y detallesTrabajo son obligatorios' },
         { status: 400 }
       );
     }
@@ -33,6 +34,7 @@ export async function POST(request: NextRequest) {
       Resultado: problemaSolucionado,
       Reparación: accionRealizada,
       Problema: problemaDescripcion,
+      Detalles: detallesTrabajo,
       "Fecha pago": problemaSolucionado === 'Reparado' ? new Date().toISOString().split('T')[0] : undefined,
       Pagado: problemaSolucionado === 'Reparado',
     };

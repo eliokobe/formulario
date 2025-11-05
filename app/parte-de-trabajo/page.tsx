@@ -33,15 +33,12 @@ export default function ParteDeTrabajoPage() {
           <h1 className="text-2xl font-bold text-gray-900 mb-4">
             ¡Éxito!
           </h1>
-          <p className="text-gray-600 mb-8">
+          <p className="text-gray-600 mb-6">
             {message}
           </p>
-          <button
-            onClick={resetForm}
-            className="w-full bg-[#008606] hover:bg-[#008606]/90 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl"
-          >
-            Crear Otro Parte de Trabajo
-          </button>
+          <p className="text-sm text-gray-500">
+            El parte de trabajo ha sido registrado correctamente en el sistema.
+          </p>
         </div>
       </div>
     );
@@ -64,7 +61,7 @@ export default function ParteDeTrabajoPage() {
             onClick={resetForm}
             className="w-full bg-[#008606] hover:bg-[#008606]/90 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl"
           >
-            Intentar de Nuevo
+            Volver al Formulario
           </button>
         </div>
       </div>

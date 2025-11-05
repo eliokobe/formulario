@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from 'react';
+import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Loader2, Camera, Upload, FileText, CheckCircle2, AlertTriangle, Wrench, User, MapPin } from 'lucide-react';
 
@@ -27,6 +28,7 @@ export function WorkReport({
     problemaSolucionado: '', // 'Reparado' o 'Sin reparar'
     accionRealizada: '', // Múltiples opciones
     problemaDescripcion: '',
+    detallesTrabajo: '', // Nueva descripción del trabajo realizado
   });
   
   const [files, setFiles] = useState({
@@ -36,6 +38,7 @@ export function WorkReport({
   
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isCompleted, setIsCompleted] = useState(false);
 
   const accionesDisponibles = [
     'Repara el cuadro eléctrico',
@@ -57,6 +60,10 @@ export function WorkReport({
 
     if (!formData.problemaDescripcion.trim()) {
       newErrors.problemaDescripcion = 'Describe el problema encontrado';
+    }
+
+    if (!formData.detallesTrabajo.trim()) {
+      newErrors.detallesTrabajo = 'Describe el trabajo que has realizado';
     }
 
     if (!files.fotoReparacion) {
@@ -84,6 +91,7 @@ export function WorkReport({
         problemaSolucionado: formData.problemaSolucionado,
         accionRealizada: formData.accionRealizada,
         problemaDescripcion: formData.problemaDescripcion,
+        detallesTrabajo: formData.detallesTrabajo,
         // En un caso real, aquí subirías los archivos
         fotoReparacion: files.fotoReparacion?.name,
         facturaServicio: files.facturaServicio?.name,
@@ -106,15 +114,7 @@ export function WorkReport({
         return;
       }
       
-      onReportComplete();
-      
-      // Reset form
-      setFormData({
-        problemaSolucionado: '',
-        accionRealizada: '',
-        problemaDescripcion: '',
-      });
-      setFiles({ fotoReparacion: null, facturaServicio: null });
+      setIsCompleted(true);
     } catch (error: any) {
       const msg = typeof error?.message === 'string' ? error.message : 'Error al enviar el parte de trabajo.';
       onReportError(msg);
@@ -139,6 +139,52 @@ export function WorkReport({
       setErrors(prev => ({ ...prev, [type]: '' }));
     }
   };
+
+  // Mostrar pantalla de éxito si el trabajo se completó
+  if (isCompleted) {
+    return (
+      <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-6 shadow-2xl border border-white/20 max-w-md mx-auto">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-center"
+        >
+          <motion.div 
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.2 }}
+            className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6"
+          >
+            <CheckCircle2 className="w-8 h-8 text-green-600" />
+          </motion.div>
+          <motion.h3 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="text-2xl font-semibold text-gray-900 mb-4"
+          >
+            ¡Parte de Trabajo Completado!
+          </motion.h3>
+          <motion.p 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="text-gray-600 mb-6"
+          >
+            El parte de trabajo ha sido enviado exitosamente al sistema.
+          </motion.p>
+          <motion.p 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="text-sm text-gray-500"
+          >
+            El registro del trabajo realizado se ha guardado correctamente.
+          </motion.p>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-6 shadow-2xl border border-white/20 max-w-4xl mx-auto">
@@ -256,6 +302,32 @@ export function WorkReport({
           </div>
           {errors.accionRealizada && (
             <p className="text-red-600 text-sm mt-2">{errors.accionRealizada}</p>
+          )}
+        </div>
+
+        {/* Descripción del trabajo realizado */}
+        <div>
+          <label htmlFor="detallesTrabajo" className="block text-sm font-medium text-gray-700 mb-2">
+            Describe el trabajo que has realizado *
+          </label>
+          <p className="text-sm text-gray-600 mb-4">
+            Explica detalladamente las tareas específicas, procedimientos y soluciones aplicadas durante la intervención
+          </p>
+          <textarea
+            id="detallesTrabajo"
+            value={formData.detallesTrabajo}
+            onChange={(e) => handleInputChange('detallesTrabajo', e.target.value)}
+            rows={5}
+            className={cn(
+              "w-full px-4 py-4 text-base rounded-xl border transition-all duration-200 focus:shadow-md resize-none focus:ring-2",
+              errors.detallesTrabajo 
+                ? "border-red-300 focus:ring-red-200 focus:border-red-400" 
+                : "border-gray-300 focus:ring-green-200 focus:border-green-400"
+            )}
+            placeholder="Ej: Se ha procedido a resetear la placa electrónica, verificar las conexiones del cuadro eléctrico y realizar pruebas de funcionamiento. El punto de recarga ahora funciona correctamente y carga a la potencia nominal..."
+          />
+          {errors.detallesTrabajo && (
+            <p className="text-red-600 text-sm mt-1">{errors.detallesTrabajo}</p>
           )}
         </div>
 

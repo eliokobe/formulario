@@ -58,16 +58,18 @@ export default function Home() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
-              className="text-gray-600 mb-8"
+              className="text-gray-600 mb-6"
             >
               {message}
             </motion.p>
-            <button
-              onClick={resetForm}
-              className="w-full bg-[#008606] hover:bg-[#008606]/90 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl"
+            <motion.p 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+              className="text-sm text-gray-500"
             >
-              Enviar Otra Solicitud
-            </button>
+              Nuestro equipo técnico se pondrá en contacto contigo lo antes posible.
+            </motion.p>
           </motion.div>
         </div>
         {toast.isVisible && (
@@ -105,7 +107,7 @@ export default function Home() {
               onClick={resetForm}
               className="w-full bg-[#008606] hover:bg-[#008606]/90 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl"
             >
-              Intentar de Nuevo
+              Volver al Formulario
             </button>
           </motion.div>
         </div>
