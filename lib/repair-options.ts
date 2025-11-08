@@ -15,6 +15,23 @@ export const cuadroElectricoOptions = [
   'Cableado interno'
 ];
 
+// Opciones específicas para reparación de electrodomésticos
+export const electrodomesticosServicios = [
+  'Reparar el sistema eléctrico',
+  'Cambiar componentes defectuosos',
+  'Sustituir el electrodoméstico',
+  'Revisar la instalación eléctrica',
+  'Limpieza y mantenimiento'
+];
+
+export const sistemaElectricoOptions = [
+  'Circuito de alimentación',
+  'Panel de control',
+  'Motor eléctrico',
+  'Sensores',
+  'Conexiones internas'
+];
+
 export const tecnicosOptions = [
   'Juan Pérez',
   'María García',

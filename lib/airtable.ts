@@ -10,8 +10,15 @@ const AIRTABLE_TABLE_FORMULARIO = process.env.AIRTABLE_TABLE_FORMULARIO;
 const AIRTABLE_TABLE_BOOKINGS = process.env.AIRTABLE_TABLE_NAME;
 const AIRTABLE_TABLE_CLIENTES = process.env.AIRTABLE_TABLE_CLIENTES;
 
+// Nueva base de Airtable para servicios generales
+const AIRTABLE_SERVICIOS_BASE_ID = 'appcRKAwnzR4sdGPL';
+const AIRTABLE_TABLE_REPARACIONES_SERVICIOS = 'Formularios';
+
 // Ensure table names with spaces/accents are URL-safe
 const getBaseUrl = (tableName: string) => `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${encodeURIComponent(tableName)}`;
+
+// URL para la nueva base de servicios generales
+const getServiciosBaseUrl = (tableName: string) => `https://api.airtable.com/v0/${AIRTABLE_SERVICIOS_BASE_ID}/${encodeURIComponent(tableName)}`;
 
 async function makeRequest(url: string, options: RequestInit = {}) {
   const headers = {
@@ -367,4 +374,222 @@ export async function uploadImageToAirtable(recordId: string, fieldName: string,
   }
 
   console.log(`✅ Successfully uploaded ${filename} to ${fieldName}`);
+}
+
+// Funciones específicas para la nueva base de servicios generales
+export async function createServicio(servicioData: any): Promise<{ id: string }> {
+  // Filter out undefined values to avoid sending them to Airtable
+  const cleanedFields = Object.entries(servicioData).reduce((acc, [key, value]) => {
+    if (value !== undefined) {
+      acc[key] = value;
+    }
+    return acc;
+  }, {} as Record<string, any>);
+
+  const payload = { fields: cleanedFields };
+
+  try {
+    const response = await makeRequest(getServiciosBaseUrl(AIRTABLE_TABLE_REPARACIONES_SERVICIOS), {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+
+    if (!response) {
+      throw new Error('No response received from Airtable');
+    }
+    
+    const data: any = await response.json();
+    
+    if (!data.id) {
+      throw new Error('No ID returned from Airtable');
+    }
+    
+    return { id: data.id };
+  } catch (error) {
+    console.error(`Error creating record in Formularios:`, error);
+    throw new Error(`Failed to create record in Formularios`);
+  }
+}
+
+export async function getServicioDataById(recordId: string): Promise<any> {
+  const url = `${getServiciosBaseUrl(AIRTABLE_TABLE_REPARACIONES_SERVICIOS)}/${recordId}`;
+
+  try {
+    const response = await makeRequest(url);
+    if (!response) {
+      throw new Error('No response received from Airtable');
+    }
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error(`Error getting formulario record ${recordId}:`, error);
+    throw new Error(`Failed to get formulario record`);
+  }
+}
+
+export async function findServicioByExpediente(expediente: string): Promise<any[]> {
+  let url = getServiciosBaseUrl(AIRTABLE_TABLE_REPARACIONES_SERVICIOS);
+  const params = new URLSearchParams({
+    filterByFormula: `{Expediente} = '${expediente}'`,
+    maxRecords: '1',
+  });
+  url += `?${params.toString()}`;
+
+  try {
+    const response = await makeRequest(url);
+    if (!response) {
+      throw new Error('No response received from Airtable');
+    }
+    const data: any = await response.json();
+    return data.records;
+  } catch (error) {
+    console.error(`Error listing records from Reparaciones:`, error);
+    throw new Error(`Failed to list records from Reparaciones`);
+  }
+}
+
+export async function findServicioByExpedienteInServicios(expediente: string): Promise<any[]> {
+  let url = getServiciosBaseUrl(AIRTABLE_TABLE_REPARACIONES_SERVICIOS);
+  const params = new URLSearchParams({
+    filterByFormula: `{Expediente} = '${expediente}'`,
+    maxRecords: '1',
+  });
+  url += `?${params.toString()}`;
+
+  try {
+    const response = await makeRequest(url);
+    if (!response) {
+      throw new Error('No response received from Airtable');
+    }
+    const data: any = await response.json();
+    return data.records;
+  } catch (error) {
+    console.error(`Error listing records from Formularios:`, error);
+    throw new Error(`Failed to list records from Formularios`);
+  }
+}
+
+export async function getServicioById(recordId: string): Promise<any> {
+  const url = `${getServiciosBaseUrl(AIRTABLE_TABLE_REPARACIONES_SERVICIOS)}/${recordId}`;
+
+  try {
+    const response = await makeRequest(url);
+    if (!response) {
+      throw new Error('No response received from Airtable');
+    }
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error(`Error getting record ${recordId} from Formularios:`, error);
+    throw new Error(`Failed to get record from Formularios`);
+  }
+}
+
+export async function updateServicioRecord(recordId: string, data: any): Promise<{ id: string }> {
+  console.log('🔧 updateServicioRecord called with recordId:', recordId);
+  console.log('🔧 updateServicioRecord table:', AIRTABLE_TABLE_REPARACIONES_SERVICIOS);
+  console.log('🔧 updateServicioRecord data keys:', Object.keys(data));
+  
+  // Filter out undefined values and keep null values (to clear fields in Airtable)
+  const cleanedFields = Object.entries(data).reduce((acc, [key, value]) => {
+    if (value !== undefined) {
+      acc[key] = value;
+    }
+    return acc;
+  }, {} as Record<string, any>);
+  
+  console.log('  cleaned fields keys:', Object.keys(cleanedFields));
+
+  const payload = { fields: cleanedFields };
+  console.log('📤 Payload size:', JSON.stringify(payload).length, 'characters');
+
+  try {
+    const url = `${getServiciosBaseUrl(AIRTABLE_TABLE_REPARACIONES_SERVICIOS)}/${recordId}`;
+    console.log('📤 Request URL:', url);
+    console.log('📤 Making PATCH request to Airtable...');
+    
+    const response = await makeRequest(url, {
+      method: 'PATCH',
+      body: JSON.stringify(payload),
+    });
+
+    if (!response) {
+      console.error('❌ No response received from Airtable');
+      throw new Error('No response received from Airtable');
+    }
+    
+    console.log('📥 Response status:', response.status);
+    const data: any = await response.json();
+    
+    if (!data.id) {
+      console.error('❌ No ID in response data:', data);
+      throw new Error('No ID returned from Airtable update');
+    }
+    
+    console.log('✅ updateServicioRecord successful, returned ID:', data.id);
+    return { id: data.id };
+  } catch (error: any) {
+    console.error(`❌ updateServicioRecord error in Formularios:`, error.name, error.message);
+    throw new Error(`Failed to update record in Formularios: ${error.message}`);
+  }
+}
+
+// Upload image to Airtable using the correct content endpoint for Servicios base
+export async function uploadImageToServiciosAirtable(recordId: string, fieldName: string, imageData: any): Promise<void> {
+  if (!AIRTABLE_TOKEN || !AIRTABLE_SERVICIOS_BASE_ID) {
+    throw new Error('Airtable configuration missing');
+  }
+
+  // Extract base64 data from the image object
+  let dataUrl: string | undefined;
+  let filename: string | undefined;
+
+  if (typeof imageData === 'string' && imageData.startsWith('data:')) {
+    dataUrl = imageData;
+  } else if (imageData && typeof imageData === 'object' && typeof imageData.url === 'string') {
+    dataUrl = imageData.url;
+    filename = imageData.filename;
+  }
+
+  if (!dataUrl) {
+    throw new Error('Invalid image data format');
+  }
+
+  const match = dataUrl.match(/^data:([^;]+);base64,(.+)$/);
+  if (!match) {
+    throw new Error('Invalid data URL format');
+  }
+
+  const contentType = match[1];
+  const base64Data = match[2];
+  const resolvedFilename = filename || `attachment.${contentType.split('/')[1] || 'bin'}`;
+
+  const uploadUrl = `https://content.airtable.com/v0/${AIRTABLE_SERVICIOS_BASE_ID}/${recordId}/${encodeURIComponent(fieldName)}/uploadAttachment`;
+  
+  const payload = JSON.stringify({
+    contentType,
+    file: base64Data,
+    filename: resolvedFilename,
+  });
+
+  console.log(`📤 Uploading to Formularios: ${uploadUrl}`);
+  console.log(`📤 Payload size: ${payload.length} characters`);
+  
+  const response = await fetch(uploadUrl, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${AIRTABLE_TOKEN}`,
+      'Content-Type': 'application/json',
+    },
+    body: payload,
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error(`❌ Upload failed: ${response.status} ${response.statusText}`);
+    console.error(`❌ Error details: ${errorText}`);
+    throw new Error(`Failed to upload image: ${response.status} ${response.statusText}`);
+  }
+
+  console.log(`✅ Successfully uploaded ${filename} to ${fieldName} in Formularios`);
 }
