@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
     const resultado = typeof body.Resultado === 'string' ? body.Resultado.trim() : '';
     const reparacion = typeof body.Reparación === 'string' ? body.Reparación.trim() : '';
     const cuadroElectrico = typeof body['Cuadro eléctrico'] === 'string' ? body['Cuadro eléctrico'].trim() : '';
-    const problema = typeof body.Problema === 'string' ? body.Problema.trim() : '';
+    const detalles = typeof body.Detalles === 'string' ? body.Detalles.trim() : '';
 
     // Validation - only require essential fields
     if (!resultado) {
@@ -58,9 +58,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (resultado === 'No reparado' && !problema) {
+    if (!detalles) {
       return NextResponse.json(
-        { error: 'Describe el problema encontrado' },
+        { error: 'Los detalles de la reparación son obligatorios' },
         { status: 400 }
       );
     }
@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
     // Only set select fields if they have values, otherwise don't include them
     body.Reparación = reparacion || undefined;
     body['Cuadro eléctrico'] = cuadroElectrico || undefined;
-    body.Problema = problema;
+    body.Detalles = detalles;
 
     // Create the repair record
     const result = await createRepair(body);
@@ -123,7 +123,8 @@ export async function GET(request: NextRequest) {
       resultado: fields['Resultado'] || '',
       reparacion: fields['Reparación'] || '',
       cuadroElectrico: fields['Cuadro eléctrico'] || '',
-      problema: fields['Problema'] || '',
+      detalles: fields['Detalles'] || '',
+      problema: fields['Problema'] || '', // Mantener para compatibilidad con datos existentes
       factura: fields['Factura'] || [],
       foto: fields['Foto'] || [],
       fotoEtiqueta: fields['Foto de la etiqueta'] || [],
@@ -172,7 +173,7 @@ export async function PUT(request: NextRequest) {
       ['Resultado', 'Resultado'],
       ['Reparación', 'Reparación'],
       ['Cuadro eléctrico', 'Cuadro eléctrico'],
-      ['Problema', 'Problema'],
+      ['Detalles', 'Detalles'],
       ['Técnico', 'Técnico'],
       ['Cliente', 'Cliente'],
       ['Dirección', 'Dirección'],

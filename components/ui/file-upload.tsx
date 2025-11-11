@@ -22,7 +22,7 @@ export function FileUpload({
     'image/*': ['.png', '.jpg', '.jpeg', '.gif'],
     'application/pdf': ['.pdf'],
   },
-  maxFiles = 1,
+  maxFiles = 3,
   maxSize = 5 * 1024 * 1024, // 5MB default
   className,
   label,

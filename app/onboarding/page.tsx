@@ -534,7 +534,6 @@ export default function OnboardingPage() {
                         accept={{
                           'image/*': ['.png', '.jpg', '.jpeg', '.gif', '.svg'],
                         }}
-                        maxFiles={1}
                         maxSize={5 * 1024 * 1024}
                       />
 
@@ -546,7 +545,6 @@ export default function OnboardingPage() {
                           'application/pdf': ['.pdf'],
                           'image/*': ['.png', '.jpg', '.jpeg'],
                         }}
-                        maxFiles={1}
                         maxSize={10 * 1024 * 1024}
                       />
                     </motion.div>

@@ -53,7 +53,7 @@ export function RepairForm({
     resultado: '',
     reparacion: '', // Single option
     cuadroElectrico: '', // Single option
-    problema: '',
+    detalles: '', // Campo que siempre aparece
   });
   
   const [files, setFiles] = useState({
@@ -97,7 +97,7 @@ export function RepairForm({
           resultado: data.resultado || '',
           reparacion: isRepaired ? data.reparacion || '' : '',
           cuadroElectrico: isRepaired ? data.cuadroElectrico || '' : '',
-          problema: !isRepaired ? data.problema || '' : '',
+          detalles: data.detalles || data.problema || '', // Usar detalles o problema como fallback
         }));
         setExistingAttachments({
           factura: Array.isArray(data.factura) ? data.factura : [],
@@ -135,7 +135,7 @@ export function RepairForm({
           resultado: data.resultado || '',
           reparacion: isRepaired ? data.reparacion || '' : '',
           cuadroElectrico: isRepaired ? data.cuadroElectrico || '' : '',
-          problema: !isRepaired ? data.problema || '' : '',
+          detalles: data.detalles || data.problema || '', // Usar detalles o problema como fallback
         }));
         setExistingAttachments({
           factura: Array.isArray(data.factura) ? data.factura : [],
@@ -183,8 +183,9 @@ export function RepairForm({
             newErrors.cuadroElectrico = 'Selecciona qué se reparó en el cuadro eléctrico';
           }
         }
-        if (formData.resultado === 'No reparado' && !formData.problema.trim()) {
-          newErrors.problema = 'Describe cuál ha sido el problema';
+        // El campo detalles ahora es siempre requerido
+        if (!formData.detalles.trim()) {
+          newErrors.detalles = 'Describe los detalles de la reparación';
         }
         break;
         
@@ -253,7 +254,7 @@ export function RepairForm({
         "Cuadro eléctrico": isRepaired && formData.reparacion === 'Reparar el cuadro eléctrico'
           ? formData.cuadroElectrico || undefined
           : undefined,
-        Problema: !isRepaired ? formData.problema : undefined,
+        Detalles: formData.detalles, // Siempre enviamos los detalles
         Técnico: formData.tecnico,
         Cliente: formData.cliente,
         Dirección: formData.direccion,
@@ -270,7 +271,7 @@ export function RepairForm({
       }
 
       if (isRepaired && isEditMode) {
-        repairData['Problema'] = '';
+        // Ya no necesitamos limpiar el campo problema, porque ahora usamos detalles siempre
         if (formData.reparacion !== 'Reparar el cuadro eléctrico') {
           repairData['Cuadro eléctrico'] = null;
         }
@@ -326,7 +327,7 @@ export function RepairForm({
     setFormData(prev => ({
       ...prev,
       resultado,
-      problema: resultado === 'Reparado' ? '' : prev.problema,
+      // Ya no limpiamos los detalles, se mantienen siempre
       reparacion: resultado === 'No reparado' ? '' : prev.reparacion,
       cuadroElectrico: resultado === 'No reparado' ? '' : prev.cuadroElectrico,
     }));
@@ -335,7 +336,7 @@ export function RepairForm({
       ...prev,
       resultado: '',
       ...(resultado === 'Reparado'
-        ? { problema: '' }
+        ? { detalles: '' }
         : { reparacion: '', cuadroElectrico: '' }),
     }));
   };
@@ -662,33 +663,28 @@ export function RepairForm({
                 </motion.div>
               )}
 
-              {formData.resultado === 'No reparado' && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                >
-                  <label htmlFor="problema" className="block text-sm font-medium text-gray-700 mb-2">
-                    ¿Cuál ha sido el problema? *
-                  </label>
-                  <textarea
-                    id="problema"
-                    value={formData.problema}
-                    onChange={(e) => handleInputChange('problema', e.target.value)}
-                    rows={4}
-                    className={cn(
-                      "w-full px-4 py-3 rounded-xl border transition-all duration-200 focus:shadow-md resize-none",
-                      errors.problema
-                        ? "border-red-300 focus:ring-2 focus:ring-red-200 focus:border-red-400"
-                        : "border-gray-300 focus:ring-2 focus:ring-green-200 focus:border-green-400"
-                    )}
-                    placeholder="Describe brevemente por qué no se ha podido completar la reparación"
-                  />
-                  {errors.problema && (
-                    <p className="text-red-600 text-sm mt-1">{errors.problema}</p>
+              {/* Campo de detalles que siempre aparece */}
+              <div>
+                <label htmlFor="detalles" className="block text-sm font-medium text-gray-700 mb-2">
+                  Detalles de la reparación *
+                </label>
+                <textarea
+                  id="detalles"
+                  value={formData.detalles}
+                  onChange={(e) => handleInputChange('detalles', e.target.value)}
+                  rows={4}
+                  className={cn(
+                    "w-full px-4 py-3 rounded-xl border transition-all duration-200 focus:shadow-md resize-none",
+                    errors.detalles
+                      ? "border-red-300 focus:ring-2 focus:ring-red-200 focus:border-red-400"
+                      : "border-gray-300 focus:ring-2 focus:ring-green-200 focus:border-green-400"
                   )}
-                </motion.div>
-              )}
+                  placeholder="Describe los detalles de lo que has hecho en esta reparación"
+                />
+                {errors.detalles && (
+                  <p className="text-red-600 text-sm mt-1">{errors.detalles}</p>
+                )}
+              </div>
             </motion.div>
           )}
 
@@ -713,7 +709,6 @@ export function RepairForm({
                 accept={{
                   'image/*': ['.png', '.jpg', '.jpeg', '.gif'],
                 }}
-                maxFiles={3}
                 maxSize={5 * 1024 * 1024}
               />
               {existingAttachments.foto.length > 0 && files.foto.length === 0 && (
@@ -737,7 +732,6 @@ export function RepairForm({
                     accept={{
                       'image/*': ['.png', '.jpg', '.jpeg', '.gif'],
                     }}
-                    maxFiles={2}
                     maxSize={5 * 1024 * 1024}
                   />
                   {existingAttachments.fotoEtiqueta.length > 0 && files.fotoEtiqueta.length === 0 && (
@@ -755,7 +749,6 @@ export function RepairForm({
                   'application/pdf': ['.pdf'],
                   'image/*': ['.png', '.jpg', '.jpeg'],
                 }}
-                maxFiles={1}
                 maxSize={10 * 1024 * 1024}
               />
               <p className="text-sm text-gray-600 -mt-2">

@@ -159,8 +159,8 @@ async function compressImage(file: File): Promise<{ url: string; filename: strin
           ctx.fillRect(0, 0, width, height);
           ctx.drawImage(img, 0, 0, width, height);
 
-          // Lower quality on mobile for smaller file size
-          const quality = isMobile ? 0.6 : 0.7;
+          // Use maximum quality (no compression)
+          const quality = 1.0;
           const compressedBase64 = canvas.toDataURL('image/jpeg', quality);
           
           // Clean up

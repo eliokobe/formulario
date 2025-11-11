@@ -446,7 +446,6 @@ export default function ReparacionForm({ recordId, onSuccess, onError }: Reparac
                   accept={{
                     'image/*': [],
                   }}
-                  maxFiles={1}
                 />
                 {errors.fotoGeneral && (
                   <p className="text-red-600 text-sm mt-2">{errors.fotoGeneral}</p>
@@ -466,7 +465,6 @@ export default function ReparacionForm({ recordId, onSuccess, onError }: Reparac
                   accept={{
                     'image/*': [],
                   }}
-                  maxFiles={1}
                 />
                 {errors.fotoEtiqueta && (
                   <p className="text-red-600 text-sm mt-2">{errors.fotoEtiqueta}</p>
@@ -501,7 +499,6 @@ export default function ReparacionForm({ recordId, onSuccess, onError }: Reparac
                   accept={{
                     'image/*': [],
                   }}
-                  maxFiles={1}
                 />
                 {errors.fotoCuadroElectrico && (
                   <p className="text-red-600 text-sm mt-2">{errors.fotoCuadroElectrico}</p>
@@ -521,7 +518,6 @@ export default function ReparacionForm({ recordId, onSuccess, onError }: Reparac
                   accept={{
                     'image/*': [],
                   }}
-                  maxFiles={1}
                 />
                 {errors.fotoRoto && (
                   <p className="text-red-600 text-sm mt-2">{errors.fotoRoto}</p>
