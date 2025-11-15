@@ -11,13 +11,13 @@ import {
   ChevronLeft, 
   ChevronRight
 } from 'lucide-react';
-import Image from 'next/image';
 
 const steps = [
   { id: 1, title: 'Datos Generales' },
   { id: 2, title: 'Fotos del Punto de Recarga' },
   { id: 3, title: 'Fotos Adicionales' },
   { id: 4, title: 'Detalles' },
+  { id: 5, title: 'Información Técnica' },
 ];
 
 const problemOptions = [
@@ -49,7 +49,7 @@ export function TechnicalSupportForm({ onComplete, onError }: TechnicalSupportFo
   const [existingData, setExistingData] = useState<any>(null);
 
   const getTotalSteps = () => {
-    return 4;
+    return 5;
   };
   
   const [formData, setFormData] = useState({
@@ -73,11 +73,15 @@ export function TechnicalSupportForm({ onComplete, onError }: TechnicalSupportFo
   // Cargar datos del expediente si existe en la URL
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
+    const idParam = urlParams.get('id');
     const recordParam = urlParams.get('record');
     const expedienteParam = urlParams.get('expediente');
     
-    // Priorizar record sobre expediente
-    if (recordParam) {
+    // Priorizar id, luego record, luego expediente para compatibilidad
+    if (idParam) {
+      setRecordId(idParam);
+      loadRecordData(idParam, 'record');
+    } else if (recordParam) {
       setRecordId(recordParam);
       loadRecordData(recordParam, 'record');
     } else if (expedienteParam) {
@@ -133,12 +137,6 @@ export function TechnicalSupportForm({ onComplete, onError }: TechnicalSupportFo
         if (!formData.direccion.trim()) {
           newErrors.direccion = 'La dirección es requerida';
         }
-        if (!formData.potenciaContratada.trim()) {
-          newErrors.potenciaContratada = 'La potencia contratada es requerida';
-        }
-        if (!formData.fechaInstalacion.trim()) {
-          newErrors.fechaInstalacion = 'La fecha de instalación es requerida';
-        }
         break;
         
       case 2:
@@ -162,6 +160,15 @@ export function TechnicalSupportForm({ onComplete, onError }: TechnicalSupportFo
           newErrors.detalles = 'Por favor, explica en detalles la incidencia';
         }
         break;
+        
+      case 5:
+        if (!formData.potenciaContratada.trim()) {
+          newErrors.potenciaContratada = 'La potencia contratada es requerida';
+        }
+        if (!formData.fechaInstalacion.trim()) {
+          newErrors.fechaInstalacion = 'La fecha de instalación es requerida';
+        }
+        break;
     }
 
     setErrors(newErrors);
@@ -170,11 +177,11 @@ export function TechnicalSupportForm({ onComplete, onError }: TechnicalSupportFo
 
   const nextStep = () => {
     if (validateStep(currentStep)) {
-      if (currentStep === 4) {
+      if (currentStep === 5) {
         handleSubmit();
         return;
       }
-      setCurrentStep(prev => Math.min(prev + 1, 4));
+      setCurrentStep(prev => Math.min(prev + 1, 5));
     }
   };
 
@@ -183,7 +190,7 @@ export function TechnicalSupportForm({ onComplete, onError }: TechnicalSupportFo
   };
 
   const handleSubmit = async () => {
-    if (currentStep === 4 && !validateStep(currentStep)) return;
+    if (currentStep === 5 && !validateStep(currentStep)) return;
     
     setIsSubmitting(true);
     
@@ -266,42 +273,18 @@ export function TechnicalSupportForm({ onComplete, onError }: TechnicalSupportFo
       case 2: return 'Fotos del Punto de Recarga';
       case 3: return 'Fotos Adicionales';
       case 4: return 'Explica en detalles la incidencia';
+      case 5: return 'Información Técnica del Punto de Recarga';
       default: return '';
     }
   };
 
   return (
-    <div className="min-h-dvh flex flex-col justify-center gap-6 max-w-4xl mx-auto px-4 xs:px-6 sm:px-6 lg:px-8 py-6">
-      {/* Logo and Header */}
-      <motion.div 
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-white/95 backdrop-blur-sm rounded-2xl sm:rounded-3xl p-4 xs:p-5 sm:p-6 md:p-8 shadow-2xl border border-white/20 landscape-compact"
-      >
-        {/* Logo and Header Section */}
-        <div className="text-center mb-6 sm:mb-8">
-          <div className="flex justify-center mb-4">
-            <Image
-              src="/iberdrola-colaborador-oficial.png"
-              alt="Colaborador oficial Iberdrola"
-              width={180}
-              height={70}
-              priority
-              className="h-auto w-36 sm:w-44 object-contain"
-            />
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
-            Formulario de diagnóstico
-          </h1>
-          <p className="mt-2 text-sm sm:text-base text-gray-600">
-            Completa este formulario en menos de un minuto para recibir asistencia inmediata
-          </p>
-        </div>
-
+    <div className="min-h-screen bg-white p-4 sm:p-6">
+      <div className="max-w-2xl mx-auto">
         {/* Progress Steps Section */}
-        <div className="max-w-md mx-auto">
+        <div className="mb-6">
           {/* Progress Bar */}
-          <div className="flex items-center mb-4">
+          <div className="flex items-center mb-6">
             <div className="flex-1 bg-gray-200 rounded-full h-2">
               <motion.div
                 animate={{
@@ -316,20 +299,16 @@ export function TechnicalSupportForm({ onComplete, onError }: TechnicalSupportFo
             </span>
           </div>
         </div>
-      </motion.div>
-
-      {/* Form Card */}
-      <div className="bg-white/95 backdrop-blur-sm rounded-2xl sm:rounded-3xl p-4 xs:p-5 sm:p-6 md:p-8 shadow-2xl border border-white/20 landscape-compact">
-        <AnimatePresence mode="wait">
-          {/* Step 1: Datos Generales */}
-          {currentStep === 1 && (
-            <motion.div
-              key="step1"
-              initial={{ opacity: 0, x: 50 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -50 }}
-              className="space-y-6"
-            >
+          <AnimatePresence mode="wait">
+            {/* Step 1: Datos Generales */}
+            {currentStep === 1 && (
+              <motion.div
+                key="step1"
+                initial={{ opacity: 0, x: 50 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -50 }}
+                className="space-y-6"
+              >
               <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-6 leading-relaxed">
                 {getStepTitle()}
               </h2>
@@ -431,63 +410,7 @@ export function TechnicalSupportForm({ onComplete, onError }: TechnicalSupportFo
                 )}
               </div>
 
-              <div>
-                <label htmlFor="potenciaContratada" className="block text-sm font-medium text-gray-700 mb-2">
-                  Potencia contratada en la vivienda (kW) *
-                </label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    id="potenciaContratada"
-                    value={formData.potenciaContratada}
-                    className={cn(
-                      "w-full px-4 py-4 text-base rounded-xl border transition-all duration-200 focus:shadow-md focus:ring-2 touch-manipulation",
-                      errors.potenciaContratada 
-                        ? "border-red-300 focus:ring-red-200 focus:border-red-400" 
-                        : "border-gray-300 focus:ring-green-200 focus:border-green-400"
-                    )}
-                    placeholder="Ej: 5.75"
-                    onChange={(e) => {
-                      setFormData(prev => ({ ...prev, potenciaContratada: e.target.value }));
-                      if (errors.potenciaContratada) {
-                        setErrors(prev => ({ ...prev, potenciaContratada: '' }));
-                      }
-                    }}
-                  />
-                </div>
-                {errors.potenciaContratada && (
-                  <p className="text-red-600 text-sm mt-1">{errors.potenciaContratada}</p>
-                )}
-              </div>
 
-              <div>
-                <label htmlFor="fechaInstalacion" className="block text-sm font-medium text-gray-700 mb-2">
-                  Fecha de instalación aproximada *
-                </label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    id="fechaInstalacion"
-                    value={formData.fechaInstalacion}
-                    className={cn(
-                      "w-full px-4 py-4 text-base rounded-xl border transition-all duration-200 focus:shadow-md focus:ring-2 touch-manipulation",
-                      errors.fechaInstalacion 
-                        ? "border-red-300 focus:ring-red-200 focus:border-red-400" 
-                        : "border-gray-300 focus:ring-green-200 focus:border-green-400"
-                    )}
-                    placeholder="Ej: Enero 2024 o hace 6 meses"
-                    onChange={(e) => {
-                      setFormData(prev => ({ ...prev, fechaInstalacion: e.target.value }));
-                      if (errors.fechaInstalacion) {
-                        setErrors(prev => ({ ...prev, fechaInstalacion: '' }));
-                      }
-                    }}
-                  />
-                </div>
-                {errors.fechaInstalacion && (
-                  <p className="text-red-600 text-sm mt-1">{errors.fechaInstalacion}</p>
-                )}
-              </div>
             </motion.div>
           )}
 
@@ -517,7 +440,7 @@ export function TechnicalSupportForm({ onComplete, onError }: TechnicalSupportFo
                   accept={{
                     'image/*': [],
                   }}
-                  maxFiles={1}
+                  maxFiles={5}
                 />
                 {errors.fotoGeneral && (
                   <p className="text-red-600 text-sm mt-2">{errors.fotoGeneral}</p>
@@ -537,7 +460,7 @@ export function TechnicalSupportForm({ onComplete, onError }: TechnicalSupportFo
                   accept={{
                     'image/*': [],
                   }}
-                  maxFiles={1}
+                  maxFiles={5}
                 />
                 {errors.fotoEtiqueta && (
                   <p className="text-red-600 text-sm mt-2">{errors.fotoEtiqueta}</p>
@@ -572,7 +495,7 @@ export function TechnicalSupportForm({ onComplete, onError }: TechnicalSupportFo
                   accept={{
                     'image/*': [],
                   }}
-                  maxFiles={1}
+                  maxFiles={5}
                 />
                 {errors.fotoCuadroElectrico && (
                   <p className="text-red-600 text-sm mt-2">{errors.fotoCuadroElectrico}</p>
@@ -592,7 +515,7 @@ export function TechnicalSupportForm({ onComplete, onError }: TechnicalSupportFo
                   accept={{
                     'image/*': [],
                   }}
-                  maxFiles={1}
+                  maxFiles={5}
                 />
                 {errors.fotoRoto && (
                   <p className="text-red-600 text-sm mt-2">{errors.fotoRoto}</p>
@@ -642,10 +565,100 @@ export function TechnicalSupportForm({ onComplete, onError }: TechnicalSupportFo
               </div>
             </motion.div>
           )}
+
+          {/* Step 5: Información Técnica */}
+          {currentStep === 5 && (
+            <motion.div
+              key="step5"
+              initial={{ opacity: 0, x: 50 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -50 }}
+              className="space-y-6"
+            >
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-6 leading-relaxed">
+                {getStepTitle()}
+              </h2>
+
+              <div>
+                <label htmlFor="fechaInstalacion" className="block text-sm font-medium text-gray-700 mb-2">
+                  Fecha de instalación del punto de recarga *
+                </label>
+                <div className="relative">
+                  <input
+                    type="date"
+                    id="fechaInstalacion"
+                    value={formData.fechaInstalacion}
+                    className={cn(
+                      "w-full px-4 py-4 text-base rounded-xl border transition-all duration-200 focus:shadow-md focus:ring-2 touch-manipulation",
+                      errors.fechaInstalacion 
+                        ? "border-red-300 focus:ring-red-200 focus:border-red-400" 
+                        : "border-gray-300 focus:ring-green-200 focus:border-green-400"
+                    )}
+                    onChange={(e) => {
+                      setFormData(prev => ({ ...prev, fechaInstalacion: e.target.value }));
+                      if (errors.fechaInstalacion) {
+                        setErrors(prev => ({ ...prev, fechaInstalacion: '' }));
+                      }
+                    }}
+                  />
+                </div>
+                {errors.fechaInstalacion && (
+                  <p className="text-red-600 text-sm mt-1">{errors.fechaInstalacion}</p>
+                )}
+              </div>
+
+              <div>
+                <label htmlFor="potenciaContratada" className="block text-sm font-medium text-gray-700 mb-2">
+                  Potencia contratada de su vivienda en kW *
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    id="potenciaContratada"
+                    value={formData.potenciaContratada}
+                    className={cn(
+                      "w-full px-4 py-4 pr-12 text-base rounded-xl border transition-all duration-200 focus:shadow-md focus:ring-2 touch-manipulation",
+                      errors.potenciaContratada 
+                        ? "border-red-300 focus:ring-red-200 focus:border-red-400" 
+                        : "border-gray-300 focus:ring-green-200 focus:border-green-400"
+                    )}
+                    placeholder="5,75"
+                    onChange={(e) => {
+                      let value = e.target.value;
+                      // Solo permitir números, comas y puntos
+                      value = value.replace(/[^\d,\.]/g, '');
+                      // Reemplazar punto por coma
+                      value = value.replace(/\./g, ',');
+                      // Solo permitir una coma
+                      const parts = value.split(',');
+                      if (parts.length > 2) {
+                        value = parts[0] + ',' + parts.slice(1).join('');
+                      }
+                      // Limitar a 2 decimales
+                      if (parts[1] && parts[1].length > 2) {
+                        value = parts[0] + ',' + parts[1].substring(0, 2);
+                      }
+                      
+                      setFormData(prev => ({ ...prev, potenciaContratada: value }));
+                      if (errors.potenciaContratada) {
+                        setErrors(prev => ({ ...prev, potenciaContratada: '' }));
+                      }
+                    }}
+                  />
+                  <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
+                    <span className="text-gray-500 text-base">kW</span>
+                  </div>
+                </div>
+                {errors.potenciaContratada && (
+                  <p className="text-red-600 text-sm mt-1">{errors.potenciaContratada}</p>
+                )}
+              </div>
+            </motion.div>
+          )}
         </AnimatePresence>
 
         {/* Navigation Buttons */}
-  <div className="flex flex-row items-center justify-between gap-3 flex-wrap mt-8 pt-6 border-t border-gray-200">
+        <div className="flex flex-row items-center justify-between gap-3 flex-wrap mt-8 pt-6 border-t border-gray-100 bg-white sticky bottom-0 pb-4 sm:pb-6 -mx-4 px-4 sm:-mx-6 sm:px-6 md:-mx-8 md:px-8">
           <button
             type="button"
             onClick={prevStep}
@@ -663,7 +676,7 @@ export function TechnicalSupportForm({ onComplete, onError }: TechnicalSupportFo
 
           <button
             type="button"
-            onClick={currentStep === 4 ? handleSubmit : nextStep}
+            onClick={currentStep === 5 ? handleSubmit : nextStep}
             disabled={isSubmitting}
             className="flex-1 min-w-[140px] flex items-center justify-center gap-2 bg-[#008606] hover:bg-[#008606]/90 active:scale-95 text-white font-semibold px-6 py-4 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl touch-manipulation"
           >
@@ -672,7 +685,7 @@ export function TechnicalSupportForm({ onComplete, onError }: TechnicalSupportFo
                 <Loader2 className="w-5 h-5 animate-spin" />
                 Enviando...
               </>
-            ) : currentStep === 4 ? (
+            ) : currentStep === 5 ? (
               <>
                 Enviar
               </>

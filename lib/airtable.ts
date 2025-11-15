@@ -9,6 +9,7 @@ const AIRTABLE_TABLE_REPARACIONES = process.env.AIRTABLE_TABLE_REPARACIONES;
 const AIRTABLE_TABLE_FORMULARIO = process.env.AIRTABLE_TABLE_FORMULARIO;
 const AIRTABLE_TABLE_BOOKINGS = process.env.AIRTABLE_TABLE_NAME;
 const AIRTABLE_TABLE_CLIENTES = process.env.AIRTABLE_TABLE_CLIENTES;
+const AIRTABLE_TABLE_SERVICIOS = process.env.AIRTABLE_TABLE_SERVICIOS;
 
 // Nueva base de Airtable para servicios generales
 const AIRTABLE_SERVICIOS_BASE_ID = 'appcRKAwnzR4sdGPL';
@@ -470,7 +471,7 @@ export async function findServicioByExpedienteInServicios(expediente: string): P
 }
 
 export async function getServicioById(recordId: string): Promise<any> {
-  const url = `${getServiciosBaseUrl(AIRTABLE_TABLE_REPARACIONES_SERVICIOS)}/${recordId}`;
+  const url = `${getBaseUrl('Servicios')}/${recordId}`;
 
   try {
     const response = await makeRequest(url);
@@ -480,14 +481,14 @@ export async function getServicioById(recordId: string): Promise<any> {
     const data = await response.json();
     return data;
   } catch (error) {
-    console.error(`Error getting record ${recordId} from Formularios:`, error);
-    throw new Error(`Failed to get record from Formularios`);
+    console.error(`Error getting record ${recordId} from Servicios:`, error);
+    throw new Error(`Failed to get record from Servicios`);
   }
 }
 
 export async function updateServicioRecord(recordId: string, data: any): Promise<{ id: string }> {
   console.log('🔧 updateServicioRecord called with recordId:', recordId);
-  console.log('🔧 updateServicioRecord table:', AIRTABLE_TABLE_REPARACIONES_SERVICIOS);
+  console.log('🔧 updateServicioRecord table: Servicios');
   console.log('🔧 updateServicioRecord data keys:', Object.keys(data));
   
   // Filter out undefined values and keep null values (to clear fields in Airtable)
@@ -504,7 +505,7 @@ export async function updateServicioRecord(recordId: string, data: any): Promise
   console.log('📤 Payload size:', JSON.stringify(payload).length, 'characters');
 
   try {
-    const url = `${getServiciosBaseUrl(AIRTABLE_TABLE_REPARACIONES_SERVICIOS)}/${recordId}`;
+    const url = `${getBaseUrl('Servicios')}/${recordId}`;
     console.log('📤 Request URL:', url);
     console.log('📤 Making PATCH request to Airtable...');
     
@@ -529,8 +530,8 @@ export async function updateServicioRecord(recordId: string, data: any): Promise
     console.log('✅ updateServicioRecord successful, returned ID:', data.id);
     return { id: data.id };
   } catch (error: any) {
-    console.error(`❌ updateServicioRecord error in Formularios:`, error.name, error.message);
-    throw new Error(`Failed to update record in Formularios: ${error.message}`);
+    console.error(`❌ updateServicioRecord error in Servicios:`, error.name, error.message);
+    throw new Error(`Failed to update record in Servicios: ${error.message}`);
   }
 }
 
@@ -593,3 +594,4 @@ export async function uploadImageToServiciosAirtable(recordId: string, fieldName
 
   console.log(`✅ Successfully uploaded ${filename} to ${fieldName} in Formularios`);
 }
+

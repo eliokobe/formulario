@@ -58,22 +58,22 @@ export function Calendar({ selectedDate, onDateSelect, onError }: CalendarProps)
   };
 
   return (
-    <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-6 shadow-2xl border border-white/20">
-      <div className="flex items-center justify-between mb-6">
-        <h3 className="text-xl font-semibold text-gray-900">
+    <div className="bg-white rounded-xl p-4 border border-gray-200">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-semibold text-gray-900">
           {format(currentMonth, 'MMMM yyyy', { locale: es })}
         </h3>
         <div className="flex gap-2">
           <button
             onClick={goToPreviousMonth}
-            className="p-2 rounded-xl hover:bg-gray-100 transition-all duration-200 hover:shadow-md"
+            className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
             type="button"
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
           <button
             onClick={goToNextMonth}
-            className="p-2 rounded-xl hover:bg-gray-100 transition-all duration-200 hover:shadow-md"
+            className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
             type="button"
           >
             <ChevronRight className="w-4 h-4" />
@@ -102,13 +102,13 @@ export function Calendar({ selectedDate, onDateSelect, onError }: CalendarProps)
               onClick={() => handleDateClick(date)}
               disabled={isDisabled}
               type="button"
-              className={cn(
-                "p-3 text-sm rounded-xl font-medium transition-all duration-200 hover:shadow-md",
-                isSelected && "bg-[#0059F1] text-white shadow-lg",
-                !isSelected && !isDisabled && isCurrentMonth && "hover:bg-[#0059F1]/10 text-gray-900 hover:text-[#0059F1]",
-                !isCurrentMonth && "text-gray-300",
-                isDisabled && "text-gray-300 cursor-not-allowed"
-              )}
+            className={cn(
+              "p-3 text-sm rounded-lg font-medium transition-colors",
+              isSelected && "bg-[#008606] text-white",
+              !isSelected && !isDisabled && isCurrentMonth && "hover:bg-gray-100 text-gray-900",
+              !isCurrentMonth && "text-gray-300",
+              isDisabled && "text-gray-300 cursor-not-allowed"
+            )}
             >
               {format(date, 'd')}
             </button>

@@ -22,8 +22,8 @@ export function FileUpload({
     'image/*': ['.png', '.jpg', '.jpeg', '.gif'],
     'application/pdf': ['.pdf'],
   },
-  maxFiles = 3,
-  maxSize = 5 * 1024 * 1024, // 5MB default
+  maxFiles = 10, // Incrementar límite de archivos
+  maxSize = 100 * 1024 * 1024, // 100MB default - sin limitación práctica
   className,
   label,
   required,
@@ -32,9 +32,8 @@ export function FileUpload({
   const [files, setFiles] = useState<File[]>([]);
   const [uploadError, setUploadError] = useState<string>('');
 
-  // Detect mobile and adjust maxSize
-  const isMobile = typeof window !== 'undefined' && /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-  const effectiveMaxSize = isMobile ? Math.min(maxSize, 5 * 1024 * 1024) : maxSize;
+  // Sin limitación de tamaño efectiva
+  const effectiveMaxSize = maxSize;
 
   const onDrop = useCallback((acceptedFiles: File[], rejectedFiles: FileRejection[]) => {
     setUploadError('');

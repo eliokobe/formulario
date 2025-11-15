@@ -29,6 +29,7 @@
    AIRTABLE_BASE_ID=your_base_id_here
    AIRTABLE_TABLE_NAME=your_table_name_here
    AIRTABLE_TABLE_CLIENTES=your_clients_table_here
+   AIRTABLE_TABLE_SERVICIOS=your_services_table_here
    UPLOADTHING_SECRET=your_secret_here
    UPLOADTHING_APP_ID=your_app_id_here
    ```

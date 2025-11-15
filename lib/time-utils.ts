@@ -11,25 +11,10 @@ export function generateTimeSlots(date: Date): string[] {
 
   const slots: string[] = [];
   
-  // Definir los períodos de disponibilidad
-  const timeRanges = [
-    { start: 8, end: 10 },   // 8:00 - 10:00
-    { start: 12, end: 14 },  // 12:00 - 14:00
-    { start: 16, end: 18 }   // 16:00 - 18:00
-  ];
-
-  // Generar slots para cada período con intervalos de 15 minutos
-  timeRanges.forEach(({ start, end }) => {
-    const startTime = setMinutes(setHours(date, start), 0);
-    const endTime = setMinutes(setHours(date, end), 0);
-    
-    let currentTime = startTime;
-    
-    while (isBefore(currentTime, endTime)) {
-      slots.push(format(currentTime, 'HH:mm'));
-      currentTime = addMinutes(currentTime, 15); // Intervalos de 15 minutos
-    }
-  });
+  // Generar slots de 9:00 a 20:00 con intervalos de 1 hora
+  for (let hour = 9; hour <= 20; hour++) {
+    slots.push(`${hour.toString().padStart(2, '0')}:00`);
+  }
 
   return slots;
 }

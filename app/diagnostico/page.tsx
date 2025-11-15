@@ -7,14 +7,14 @@ import { Toast } from '@/components/ui/toast';
 import { useToast } from '@/hooks/useToastClient';
 import { CheckCircle } from 'lucide-react';
 
-export default function Home() {
+export default function DiagnosticoPage() {
   const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState('');
   const { toast, showToast, hideToast } = useToast();
 
   const handleSupportComplete = () => {
     setStatus('success');
-    setMessage('¡Tu solicitud de asistencia técnica ha sido enviada exitosamente!');
+    setMessage('');
     showToast('¡Solicitud enviada exitosamente!', 'success');
   };
 
@@ -32,11 +32,11 @@ export default function Home() {
   if (status === 'success') {
     return (
       <>
-        <div className="min-h-screen bg-gradient-to-t from-[#008606] to-black flex items-center justify-center p-4 sm:p-6">
+        <div className="min-h-screen bg-white flex items-center justify-center p-4 sm:p-6">
           <motion.div 
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-2xl sm:rounded-3xl p-6 sm:p-8 shadow-2xl text-center max-w-md mx-auto w-full"
+            className="bg-white text-center max-w-md mx-auto w-full"
           >
             <motion.div 
               initial={{ scale: 0 }}
@@ -60,14 +60,6 @@ export default function Home() {
               transition={{ delay: 0.4 }}
               className="text-gray-600 mb-6"
             >
-              {message}
-            </motion.p>
-            <motion.p 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
-              className="text-sm text-gray-500"
-            >
               Nuestro equipo técnico se pondrá en contacto contigo lo antes posible.
             </motion.p>
           </motion.div>
@@ -88,11 +80,11 @@ export default function Home() {
   if (status === 'error') {
     return (
       <>
-        <div className="min-h-screen bg-gradient-to-t from-red-50 to-pink-100 flex items-center justify-center p-4">
+        <div className="min-h-screen bg-white flex items-center justify-center p-4">
           <motion.div 
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-3xl p-8 shadow-2xl text-center max-w-md mx-auto"
+            className="bg-white text-center max-w-md mx-auto w-full"
           >
             <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
               <CheckCircle className="w-8 h-8 text-red-600" />
@@ -126,13 +118,11 @@ export default function Home() {
 
   return (
     <>
-      <div className="min-h-screen bg-white py-6 sm:py-12 px-4 sm:px-6">
-        <div className="max-w-4xl mx-auto">
-          <TechnicalSupportForm 
-            onComplete={handleSupportComplete}
-            onError={handleSupportError}
-          />
-        </div>
+      <div className="min-h-screen bg-white">
+        <TechnicalSupportForm 
+          onComplete={handleSupportComplete}
+          onError={handleSupportError}
+        />
       </div>
       
       {toast.isVisible && (

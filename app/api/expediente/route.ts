@@ -3,19 +3,24 @@ import { findFormularioByExpediente, getFormularioById, updateFormulario, upload
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
+  const id = searchParams.get('id');
   const recordId = searchParams.get('record');
   const expediente = searchParams.get('expediente');
 
-  if (!recordId && !expediente) {
-    return NextResponse.json({ error: 'Se requiere record o expediente' }, { status: 400 });
+  if (!id && !recordId && !expediente) {
+    return NextResponse.json({ error: 'Se requiere id, record o expediente' }, { status: 400 });
   }
 
   try {
     let record;
     
-    if (recordId) {
-      // Buscar por record ID directamente
-      record = await getFormularioById(recordId);
+    if (id || recordId) {
+      // Buscar por ID (priorizar 'id' sobre 'record')
+      const targetId = id || recordId;
+      if (!targetId) {
+        return NextResponse.json({ error: 'ID no válido' }, { status: 400 });
+      }
+      record = await getFormularioById(targetId);
       if (!record) {
         return NextResponse.json({ error: 'Registro no encontrado' }, { status: 404 });
       }
@@ -54,13 +59,14 @@ export async function PUT(request: NextRequest) {
   console.log('🚀 PUT /api/expediente - Starting request');
   
   const { searchParams } = new URL(request.url);
+  const id = searchParams.get('id');
   const recordId = searchParams.get('record');
   const expediente = searchParams.get('expediente');
-  console.log('📋 Parameters - Record:', recordId, 'Expediente:', expediente);
+  console.log('📋 Parameters - ID:', id, 'Record:', recordId, 'Expediente:', expediente);
 
-  if (!recordId && !expediente) {
-    console.log('❌ No record or expediente provided');
-    return NextResponse.json({ error: 'Se requiere record o expediente' }, { status: 400 });
+  if (!id && !recordId && !expediente) {
+    console.log('❌ No id, record or expediente provided');
+    return NextResponse.json({ error: 'Se requiere id, record o expediente' }, { status: 400 });
   }
 
   try {
@@ -82,10 +88,15 @@ export async function PUT(request: NextRequest) {
 
     let targetRecordId: string;
     
-    if (recordId) {
-      // Usar el record ID directamente
-      targetRecordId = recordId;
-      console.log('✅ Using record ID directly:', targetRecordId);
+    if (id || recordId) {
+      // Usar el ID directamente (priorizar 'id' sobre 'record')
+      const targetId = id || recordId;
+      if (!targetId) {
+        console.log('❌ Invalid ID provided');
+        return NextResponse.json({ error: 'ID no válido' }, { status: 400 });
+      }
+      targetRecordId = targetId;
+      console.log('✅ Using ID directly:', targetRecordId);
     } else {
       // Buscar por expediente (mantener compatibilidad)
       console.log('🔍 Searching for expediente in Airtable...');

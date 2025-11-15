@@ -14,7 +14,6 @@ import {
   CheckCircle
 } from 'lucide-react';
 import { serviciosOptions, cuadroElectricoOptions } from '@/lib/repair-options';
-import Image from 'next/image';
 
 const steps = [
   { id: 1, title: 'Datos Generales' },
@@ -66,7 +65,7 @@ export function RepairForm({
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const recordParam = params.get('record');
+    const recordParam = params.get('id');
     const expedienteParam = params.get('expediente');
 
     if (recordParam) {
@@ -390,55 +389,10 @@ export function RepairForm({
   }
 
   return (
-    <div className="min-h-dvh flex flex-col justify-center gap-6 max-w-4xl mx-auto px-4 xs:px-6 sm:px-6 lg:px-8 py-6">
-      {/* Logo, Header and Progress Steps Combined */}
-      <motion.div 
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-white/95 backdrop-blur-sm rounded-2xl sm:rounded-3xl p-4 xs:p-5 sm:p-6 md:p-8 shadow-2xl border border-white/20 landscape-compact"
-      >
-        {/* Logo and Header Section */}
-        <div className="text-center mb-6 sm:mb-8">
-          <div className="flex items-center justify-center mb-4">
-            <Image
-              src="/logo.png"
-              alt="Logo"
-              width={100}
-              height={100}
-              className="object-contain sm:w-[120px] sm:h-[120px]"
-            />
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
-            Parte de trabajo
-          </h1>
-          <p className="text-sm sm:text-base text-gray-600">
-            Registra los detalles de la reparación realizada
-          </p>
-        </div>
-
-        {/* Progress Steps Section */}
-        <div className="max-w-md mx-auto">
-          {/* Progress Bar */}
-          <div className="flex items-center mb-4">
-            <div className="flex-1 bg-gray-200 rounded-full h-2">
-              <motion.div
-                animate={{
-                  width: `${(currentStep / steps.length) * 100}%`
-                }}
-                transition={{ duration: 0.3 }}
-                className="bg-[#008606] h-2 rounded-full"
-              />
-            </div>
-            <span className="ml-3 text-sm font-medium text-gray-600">
-              {currentStep} de {steps.length}
-            </span>
-          </div>
-          
-        </div>
-      </motion.div>
-
-      {/* Form Card */}
-      <div className="bg-white/95 backdrop-blur-sm rounded-2xl sm:rounded-3xl p-4 xs:p-5 sm:p-6 md:p-8 shadow-2xl border border-white/20 landscape-compact">
+    <div className="min-h-screen bg-white p-4 sm:p-6">
+      <div className="max-w-2xl mx-auto">
+        {/* Form Content */}
+        <div>
         <AnimatePresence mode="wait">
           {/* Step 1: Datos Generales */}
           {currentStep === 1 && (
@@ -709,7 +663,6 @@ export function RepairForm({
                 accept={{
                   'image/*': ['.png', '.jpg', '.jpeg', '.gif'],
                 }}
-                maxSize={5 * 1024 * 1024}
               />
               {existingAttachments.foto.length > 0 && files.foto.length === 0 && (
                 <p className="text-sm text-gray-500 -mt-2">
@@ -732,7 +685,6 @@ export function RepairForm({
                     accept={{
                       'image/*': ['.png', '.jpg', '.jpeg', '.gif'],
                     }}
-                    maxSize={5 * 1024 * 1024}
                   />
                   {existingAttachments.fotoEtiqueta.length > 0 && files.fotoEtiqueta.length === 0 && (
                     <p className="text-sm text-gray-500 -mt-2">
@@ -742,18 +694,21 @@ export function RepairForm({
                 </motion.div>
               )}
 
-              <FileUpload
-                label="Factura"
-                onFileSelect={(selected) => handleFileChange('factura', selected)}
-                accept={{
-                  'application/pdf': ['.pdf'],
-                  'image/*': ['.png', '.jpg', '.jpeg'],
-                }}
-                maxSize={10 * 1024 * 1024}
-              />
-              <p className="text-sm text-gray-600 -mt-2">
-                Puedes enviar el parte sin enviar la factura y cuando puedas entras de nuevo y la adjuntas.
-              </p>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Factura
+                </label>
+                <p className="text-sm text-gray-600 mb-4">
+                  La factura es opcional. Puedes completar el parte ahora y adjuntar la factura más tarde.
+                </p>
+                <FileUpload
+                  onFileSelect={(selected) => handleFileChange('factura', selected)}
+                  accept={{
+                    'application/pdf': ['.pdf'],
+                    'image/*': ['.png', '.jpg', '.jpeg'],
+                  }}
+                />
+              </div>
               {existingAttachments.factura.length > 0 && files.factura.length === 0 && (
                 <p className="text-sm text-gray-500 -mt-2">
                   Ya hay {existingAttachments.factura.length === 1 ? 'una factura' : `${existingAttachments.factura.length} facturas`} vinculada a este expediente.
@@ -809,6 +764,7 @@ export function RepairForm({
               )}
             </button>
           )}
+        </div>
         </div>
       </div>
     </div>

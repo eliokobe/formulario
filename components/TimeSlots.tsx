@@ -30,9 +30,9 @@ export function TimeSlots({ selectedDate, selectedTime, onTimeSelect }: TimeSlot
 
   if (timeSlots.length === 0) {
     return (
-      <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-6 shadow-2xl border border-white/20">
-        <h3 className="text-xl font-semibold text-gray-900 mb-4">Horarios Disponibles</h3>
-        <p className="text-gray-500 text-center py-8">
+      <div className="bg-white rounded-xl p-4 border border-gray-200">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Horarios Disponibles</h3>
+        <p className="text-gray-500 text-center py-4">
           {getUnavailableMessage()}
         </p>
       </div>
@@ -40,8 +40,8 @@ export function TimeSlots({ selectedDate, selectedTime, onTimeSelect }: TimeSlot
   }
 
   return (
-    <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-6 shadow-2xl border border-white/20">
-      <h3 className="text-xl font-semibold text-gray-900 mb-4">Horarios Disponibles</h3>
+    <div className="bg-white rounded-xl p-4 border border-gray-200">
+      <h3 className="text-lg font-semibold text-gray-900 mb-4">Horarios Disponibles</h3>
       
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         {timeSlots.map((time) => {
@@ -54,9 +54,9 @@ export function TimeSlots({ selectedDate, selectedTime, onTimeSelect }: TimeSlot
               onClick={() => !isInPast && onTimeSelect(time)}
               disabled={isInPast}
               className={cn(
-                "p-3 text-sm font-medium rounded-xl border transition-all duration-200 hover:shadow-md",
-                isSelected && "bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-blue-600 shadow-lg",
-                !isSelected && !isInPast && "border-gray-200 hover:border-blue-400 hover:bg-blue-50 text-gray-900 hover:text-blue-600",
+                "p-3 text-sm font-medium rounded-lg border transition-colors",
+                isSelected && "bg-[#008606] text-white border-[#008606]",
+                !isSelected && !isInPast && "border-gray-200 hover:border-gray-300 hover:bg-gray-50 text-gray-900",
                 isInPast && "border-gray-100 text-gray-300 cursor-not-allowed bg-gray-50"
               )}
             >
