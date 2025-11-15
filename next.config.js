@@ -1,5 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Output standalone for Docker optimization
+  output: 'standalone',
   // Generate unique build IDs to ensure cache invalidation
   generateBuildId: () => {
     return 'build-' + Date.now();
