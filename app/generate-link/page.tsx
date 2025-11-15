@@ -46,8 +46,8 @@ export default function GenerateLink() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-t from-[#008606] to-black py-12 px-4">
-      <div className="max-w-2xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-t from-[#008606] to-black flex items-center justify-center p-4">
+      <div className="w-full max-w-2xl mx-auto">
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}

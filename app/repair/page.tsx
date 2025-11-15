@@ -78,21 +78,10 @@ export default function RepairPage() {
   return (
     <>
       <div className="min-h-screen bg-gradient-to-t from-[#008606] to-black">
-        <div className="container mx-auto px-4 py-8">
-          <div className="max-w-6xl mx-auto">
-            {/* Repair Form */}
-            <motion.div
-              initial={{ opacity: 0, y: 50 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-            >
-              <RepairForm
-                onRepairComplete={handleRepairComplete}
-                onRepairError={handleRepairError}
-              />
-            </motion.div>
-          </div>
-        </div>
+        <RepairForm
+          onRepairComplete={handleRepairComplete}
+          onRepairError={handleRepairError}
+        />
       </div>
       
       {toast.isVisible && (

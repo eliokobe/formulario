@@ -381,16 +381,18 @@ export function RepairForm({
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[300px]">
-        <Loader2 className="w-6 h-6 animate-spin text-[#008606]" />
-        <span className="ml-3 text-sm text-gray-600">Cargando información del expediente...</span>
+      <div className="min-h-screen bg-white p-4 sm:p-6 flex items-center justify-center">
+        <div className="flex items-center justify-center">
+          <Loader2 className="w-6 h-6 animate-spin text-[#008606]" />
+          <span className="ml-3 text-sm text-gray-600">Cargando información del expediente...</span>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-white p-4 sm:p-6">
-      <div className="max-w-2xl mx-auto">
+    <div className="min-h-screen bg-white p-4 sm:p-6 flex items-center justify-center">
+      <div className="w-full max-w-2xl mx-auto">
         {/* Form Content */}
         <div>
         <AnimatePresence mode="wait">
@@ -699,7 +701,7 @@ export function RepairForm({
                   Factura
                 </label>
                 <p className="text-sm text-gray-600 mb-4">
-                  La factura es opcional. Puedes completar el parte ahora y adjuntar la factura más tarde.
+                  Puedes completar el parte ahora y adjuntar la factura más tarde.
                 </p>
                 <FileUpload
                   onFileSelect={(selected) => handleFileChange('factura', selected)}

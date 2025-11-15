@@ -126,13 +126,11 @@ export default function Home() {
 
   return (
     <>
-      <div className="min-h-screen bg-white py-6 sm:py-12 px-4 sm:px-6">
-        <div className="max-w-4xl mx-auto">
-          <TechnicalSupportForm 
-            onComplete={handleSupportComplete}
-            onError={handleSupportError}
-          />
-        </div>
+      <div className="min-h-screen bg-white">
+        <TechnicalSupportForm 
+          onComplete={handleSupportComplete}
+          onError={handleSupportError}
+        />
       </div>
       
       {toast.isVisible && (

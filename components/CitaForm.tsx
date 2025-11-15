@@ -133,8 +133,8 @@ export function CitaForm({ onComplete, onError }: CitaFormProps) {
   // Paso 1: Mostrar detalles del servicio
   if (currentStep === 1) {
     return (
-      <div className="min-h-screen bg-white p-4 sm:p-6">
-        <div className="max-w-md mx-auto">
+      <div className="min-h-screen bg-white p-4 sm:p-6 flex items-center justify-center">
+        <div className="w-full max-w-md mx-auto">
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -195,8 +195,8 @@ export function CitaForm({ onComplete, onError }: CitaFormProps) {
 
   // Paso 2: Selección de fecha y hora
   return (
-    <div className="min-h-screen bg-white p-4 sm:p-6">
-      <div className="max-w-2xl mx-auto">
+    <div className="min-h-screen bg-white p-4 sm:p-6 flex items-center justify-center">
+      <div className="w-full max-w-2xl mx-auto">
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

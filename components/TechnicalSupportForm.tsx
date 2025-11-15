@@ -40,6 +40,38 @@ interface TechnicalSupportFormProps {
   onError: (error: string) => void;
 }
 
+// Funciones de utilidad para conversión de fechas
+const convertDateFromAirtable = (airtableDate: string): string => {
+  if (!airtableDate) return '';
+  
+  // Si ya está en formato DD/MM/YYYY, devolverlo tal como está
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(airtableDate)) {
+    return airtableDate;
+  }
+  
+  // Si está en formato YYYY-MM-DD (formato ISO), convertir a DD/MM/YYYY
+  const isoMatch = airtableDate.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (isoMatch) {
+    const [, year, month, day] = isoMatch;
+    return `${day}/${month}/${year}`;
+  }
+  
+  return airtableDate;
+};
+
+const convertDateToAirtable = (displayDate: string): string => {
+  if (!displayDate) return '';
+  
+  // Si está en formato DD/MM/YYYY, convertir a YYYY-MM-DD
+  const ddmmyyyyMatch = displayDate.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (ddmmyyyyMatch) {
+    const [, day, month, year] = ddmmyyyyMatch;
+    return `${year}-${month}-${day}`;
+  }
+  
+  return displayDate;
+};
+
 export function TechnicalSupportForm({ onComplete, onError }: TechnicalSupportFormProps) {
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -107,7 +139,7 @@ export function TechnicalSupportForm({ onComplete, onError }: TechnicalSupportFo
           telefono: data.telefono || '',
           direccion: data.direccion || '',
           potenciaContratada: data.potenciaContratada || '',
-          fechaInstalacion: data.fechaInstalacion || '',
+          fechaInstalacion: convertDateFromAirtable(data.fechaInstalacion || ''),
           detalles: data.detalles || '',
         }));
 
@@ -167,6 +199,27 @@ export function TechnicalSupportForm({ onComplete, onError }: TechnicalSupportFo
         }
         if (!formData.fechaInstalacion.trim()) {
           newErrors.fechaInstalacion = 'La fecha de instalación es requerida';
+        } else {
+          // Validar formato DD/MM/YYYY
+          const dateRegex = /^(\d{2})\/(\d{2})\/(\d{4})$/;
+          const match = formData.fechaInstalacion.match(dateRegex);
+          
+          if (!match) {
+            newErrors.fechaInstalacion = 'Formato de fecha inválido. Use DD/MM/YYYY';
+          } else {
+            const day = parseInt(match[1], 10);
+            const month = parseInt(match[2], 10);
+            const year = parseInt(match[3], 10);
+            
+            // Validar rangos básicos
+            if (day < 1 || day > 31) {
+              newErrors.fechaInstalacion = 'Día inválido';
+            } else if (month < 1 || month > 12) {
+              newErrors.fechaInstalacion = 'Mes inválido';
+            } else if (year < 1900 || year > new Date().getFullYear()) {
+              newErrors.fechaInstalacion = 'Año inválido';
+            }
+          }
         }
         break;
     }
@@ -219,7 +272,7 @@ export function TechnicalSupportForm({ onComplete, onError }: TechnicalSupportFo
         "Teléfono": formData.telefono,
         "Dirección": formData.direccion,
         "Potencia contratada en kW": formData.potenciaContratada,
-        "Fecha instalación": formData.fechaInstalacion,
+        "Fecha instalación": convertDateToAirtable(formData.fechaInstalacion),
         "Foto general": fotoGeneralUploads,
         "Foto etiqueta": fotoEtiquetaUploads,
         "Foto cuadro": fotoCuadroElectricoUploads,
@@ -279,8 +332,8 @@ export function TechnicalSupportForm({ onComplete, onError }: TechnicalSupportFo
   };
 
   return (
-    <div className="min-h-screen bg-white p-4 sm:p-6">
-      <div className="max-w-2xl mx-auto">
+    <div className="min-h-screen bg-white p-4 sm:p-6 flex items-center justify-center">
+      <div className="w-full max-w-2xl mx-auto">
         {/* Progress Steps Section */}
         <div className="mb-6">
           {/* Progress Bar */}
@@ -484,7 +537,7 @@ export function TechnicalSupportForm({ onComplete, onError }: TechnicalSupportFo
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Foto del cuadro eléctrico del cargador con la puerta abierta *
+                  Foto del cuadro eléctrico del cargador *
                 </label>
                 <p className="text-sm text-gray-600 mb-4">
                   Abre la puerta del cuadro eléctrico y toma una foto clara del interior
@@ -585,9 +638,11 @@ export function TechnicalSupportForm({ onComplete, onError }: TechnicalSupportFo
                 </label>
                 <div className="relative">
                   <input
-                    type="date"
+                    type="text"
                     id="fechaInstalacion"
                     value={formData.fechaInstalacion}
+                    placeholder="DD/MM/YYYY"
+                    maxLength={10}
                     className={cn(
                       "w-full px-4 py-4 text-base rounded-xl border transition-all duration-200 focus:shadow-md focus:ring-2 touch-manipulation",
                       errors.fechaInstalacion 
@@ -595,7 +650,23 @@ export function TechnicalSupportForm({ onComplete, onError }: TechnicalSupportFo
                         : "border-gray-300 focus:ring-green-200 focus:border-green-400"
                     )}
                     onChange={(e) => {
-                      setFormData(prev => ({ ...prev, fechaInstalacion: e.target.value }));
+                      const value = e.target.value;
+                      // Solo permitir números y barras
+                      const cleanValue = value.replace(/[^\d]/g, '');
+                      
+                      // Formatear automáticamente DD/MM/YYYY
+                      let formattedValue = '';
+                      if (cleanValue.length >= 1) {
+                        formattedValue = cleanValue.substring(0, 2);
+                      }
+                      if (cleanValue.length >= 3) {
+                        formattedValue += '/' + cleanValue.substring(2, 4);
+                      }
+                      if (cleanValue.length >= 5) {
+                        formattedValue += '/' + cleanValue.substring(4, 8);
+                      }
+                      
+                      setFormData(prev => ({ ...prev, fechaInstalacion: formattedValue }));
                       if (errors.fechaInstalacion) {
                         setErrors(prev => ({ ...prev, fechaInstalacion: '' }));
                       }
