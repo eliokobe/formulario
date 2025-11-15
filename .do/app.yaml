@@ -30,12 +30,16 @@ services:
     value: YOUR_AIRTABLE_TOKEN
   - key: AIRTABLE_BASE_ID
     value: YOUR_AIRTABLE_BASE_ID
+  - key: AIRTABLE_TABLE_REPARACIONES
+    value: Reparaciones
+  - key: AIRTABLE_TABLE_FORMULARIO
+    value: Formularios
   - key: AIRTABLE_TABLE_NAME
-    value: YOUR_AIRTABLE_TABLE_NAME
+    value: Servicios
   - key: AIRTABLE_TABLE_CLIENTES
-    value: YOUR_AIRTABLE_TABLE_CLIENTES
+    value: Servicios
   - key: AIRTABLE_TABLE_SERVICIOS
-    value: YOUR_AIRTABLE_TABLE_SERVICIOS
+    value: Servicios
   - key: UPLOADTHING_SECRET
     value: YOUR_UPLOADTHING_SECRET
   - key: UPLOADTHING_APP_ID
