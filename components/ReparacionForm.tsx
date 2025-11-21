@@ -6,7 +6,6 @@ import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { FileUpload } from '@/components/ui/file-upload';
 import { uploadFiles } from '@/lib/upload';
-import Image from 'next/image';
 
 interface FormData {
   cliente: string;
@@ -222,37 +221,12 @@ export default function ReparacionForm({ recordId, onSuccess, onError }: Reparac
   };
 
   return (
-    <div className="min-h-dvh flex flex-col justify-center gap-6 max-w-4xl mx-auto px-4 xs:px-6 sm:px-6 lg:px-8 py-6">
-      {/* Logo and Header */}
-      <motion.div 
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-white/95 backdrop-blur-sm rounded-2xl sm:rounded-3xl p-4 xs:p-5 sm:p-6 md:p-8 shadow-2xl border border-white/20 landscape-compact"
-      >
-        {/* Logo and Header Section */}
-        <div className="text-center mb-6 sm:mb-8">
-          <div className="flex justify-center mb-4">
-            <Image
-              src="/logo.png"
-              alt="Ritest"
-              width={180}
-              height={70}
-              priority
-              className="h-auto w-36 sm:w-44 object-contain"
-            />
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
-            Formulario de diagnóstico
-          </h1>
-          <p className="mt-2 text-sm sm:text-base text-gray-600">
-            Completa este formulario en menos de un minuto para recibir asistencia inmediata
-          </p>
-        </div>
-
+    <div className="min-h-screen bg-white p-4 sm:p-6 flex items-center justify-center">
+      <div className="w-full max-w-2xl mx-auto">
         {/* Progress Steps Section */}
-        <div className="max-w-md mx-auto">
+        <div className="mb-6">
           {/* Progress Bar */}
-          <div className="flex items-center mb-4">
+          <div className="flex items-center mb-6">
             <div className="flex-1 bg-gray-200 rounded-full h-2">
               <motion.div
                 animate={{
@@ -267,11 +241,7 @@ export default function ReparacionForm({ recordId, onSuccess, onError }: Reparac
             </span>
           </div>
         </div>
-      </motion.div>
-
-      {/* Form Card */}
-      <div className="bg-white/95 backdrop-blur-sm rounded-2xl sm:rounded-3xl p-4 xs:p-5 sm:p-6 md:p-8 shadow-2xl border border-white/20 landscape-compact">
-        <AnimatePresence mode="wait">
+          <AnimatePresence mode="wait">
           {/* Step 1: Datos Generales */}
           {currentStep === 1 && (
             <motion.div
@@ -570,7 +540,7 @@ export default function ReparacionForm({ recordId, onSuccess, onError }: Reparac
         </AnimatePresence>
 
         {/* Navigation Buttons */}
-        <div className="flex flex-row items-center justify-between gap-3 flex-wrap mt-8 pt-6 border-t border-gray-200">
+        <div className="flex flex-row items-center justify-between gap-3 flex-wrap mt-8 pt-6 border-t border-gray-100 bg-white sticky bottom-0 pb-4 sm:pb-6 -mx-4 px-4 sm:-mx-6 sm:px-6 md:-mx-8 md:px-8">
           <button
             type="button"
             onClick={prevStep}

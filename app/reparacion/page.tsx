@@ -2,75 +2,138 @@
 
 import { useState } from 'react';
 import ReparacionForm from '@/components/ReparacionForm';
-import { CheckCircle, AlertCircle } from 'lucide-react';
+import { CheckCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { Toast } from '@/components/ui/toast';
+import { useToast } from '@/hooks/useToastClient';
 
 export default function ReparacionPage() {
-  const [status, setStatus] = useState<'form' | 'success' | 'error'>('form');
+  const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState<string>('');
+  const { toast, showToast, hideToast } = useToast();
 
   const handleSuccess = () => {
     setStatus('success');
-    setMessage('¡Reparación registrada exitosamente!');
+    setMessage('');
+    showToast('¡Reparación registrada exitosamente!', 'success');
   };
 
   const handleError = (error: string) => {
     setStatus('error');
     setMessage(error);
+    showToast(error, 'error');
   };
 
-
+  const resetForm = () => {
+    setStatus('idle');
+    setMessage('');
+  };
 
   if (status === 'success') {
     return (
-      <div className="min-h-screen bg-gradient-to-t from-green-600 to-black flex items-center justify-center px-4">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="bg-white/95 backdrop-blur-sm rounded-3xl p-8 md:p-12 shadow-2xl border border-white/20 text-center max-w-md mx-auto"
-        >
-          <div className="flex justify-center mb-6">
-            <CheckCircle className="w-16 h-16 text-green-600" />
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">
-            ¡Perfecto!
-          </h1>
-          <p className="text-gray-600 mb-8 text-lg">
-            {message}
-          </p>
-        </motion.div>
-      </div>
+      <>
+        <div className="min-h-screen bg-white flex items-center justify-center p-4 sm:p-6">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white text-center max-w-md mx-auto w-full"
+          >
+            <motion.div 
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.2 }}
+              className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6"
+            >
+              <CheckCircle className="w-8 h-8 text-green-600" />
+            </motion.div>
+            <motion.h2 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="text-2xl font-bold text-gray-900 mb-2"
+            >
+              ¡Solicitud Enviada!
+            </motion.h2>
+            <motion.p 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              className="text-gray-600 mb-6"
+            >
+              Nuestro equipo técnico se pondrá en contacto contigo lo antes posible.
+            </motion.p>
+          </motion.div>
+        </div>
+        {toast.isVisible && (
+          <Toast
+            message={toast.message}
+            type={toast.type}
+            isVisible={toast.isVisible}
+            onClose={hideToast}
+            showIcon={toast.showIcon}
+          />
+        )}
+      </>
     );
   }
 
   if (status === 'error') {
     return (
-      <div className="min-h-screen bg-gradient-to-t from-red-600 to-black flex items-center justify-center px-4">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="bg-white/95 backdrop-blur-sm rounded-3xl p-8 md:p-12 shadow-2xl border border-white/20 text-center max-w-md mx-auto"
-        >
-          <div className="flex justify-center mb-6">
-            <AlertCircle className="w-16 h-16 text-red-600" />
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">
-            Oops!
-          </h1>
-          <p className="text-gray-600 mb-8 text-lg">
-            {message}
-          </p>
-        </motion.div>
-      </div>
+      <>
+        <div className="min-h-screen bg-white flex items-center justify-center p-4">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white text-center max-w-md mx-auto w-full"
+          >
+            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <CheckCircle className="w-8 h-8 text-red-600" />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+              Error
+            </h2>
+            <p className="text-gray-600 mb-8">
+              {message}
+            </p>
+            <button
+              onClick={resetForm}
+              className="w-full bg-[#008606] hover:bg-[#008606]/90 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl"
+            >
+              Volver al Formulario
+            </button>
+          </motion.div>
+        </div>
+        {toast.isVisible && (
+          <Toast
+            message={toast.message}
+            type={toast.type}
+            isVisible={toast.isVisible}
+            onClose={hideToast}
+            showIcon={toast.showIcon}
+          />
+        )}
+      </>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-t from-green-600 to-black">
-      <ReparacionForm
-        onSuccess={handleSuccess}
-        onError={handleError}
-      />
-    </div>
+    <>
+      <div className="min-h-screen bg-white">
+        <ReparacionForm
+          onSuccess={handleSuccess}
+          onError={handleError}
+        />
+      </div>
+      
+      {toast.isVisible && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          isVisible={toast.isVisible}
+          onClose={hideToast}
+          showIcon={toast.showIcon}
+        />
+      )}
+    </>
   );
 }
