@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import ReparacionForm from '@/components/ReparacionForm';
-import { CheckCircle } from 'lucide-react';
+import { CheckCircle, AlertCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Toast } from '@/components/ui/toast';
 import { useToast } from '@/hooks/useToastClient';
@@ -87,7 +87,7 @@ export default function ReparacionPage() {
             className="bg-white text-center max-w-md mx-auto w-full"
           >
             <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
-              <CheckCircle className="w-8 h-8 text-red-600" />
+              <AlertCircle className="w-8 h-8 text-red-600" />
             </div>
             <h2 className="text-2xl font-bold text-gray-900 mb-2">
               Error
