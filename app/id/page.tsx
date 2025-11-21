@@ -7,7 +7,7 @@ import { Toast } from '@/components/ui/toast';
 import { useToast } from '@/hooks/useToastClient';
 import { CheckCircle } from 'lucide-react';
 
-export default function ReparacionPage() {
+export default function IdPage() {
   const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState('');
   const { toast, showToast, hideToast } = useToast();

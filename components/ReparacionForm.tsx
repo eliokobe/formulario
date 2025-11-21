@@ -222,37 +222,12 @@ export default function ReparacionForm({ recordId, onSuccess, onError }: Reparac
   };
 
   return (
-    <div className="min-h-dvh flex flex-col justify-center gap-6 max-w-4xl mx-auto px-4 xs:px-6 sm:px-6 lg:px-8 py-6">
-      {/* Logo and Header */}
-      <motion.div 
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-white/95 backdrop-blur-sm rounded-2xl sm:rounded-3xl p-4 xs:p-5 sm:p-6 md:p-8 shadow-2xl border border-white/20 landscape-compact"
-      >
-        {/* Logo and Header Section */}
-        <div className="text-center mb-6 sm:mb-8">
-          <div className="flex justify-center mb-4">
-            <Image
-              src="/logo.png"
-              alt="Ritest"
-              width={180}
-              height={70}
-              priority
-              className="h-auto w-36 sm:w-44 object-contain"
-            />
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
-            Formulario de diagnóstico
-          </h1>
-          <p className="mt-2 text-sm sm:text-base text-gray-600">
-            Completa este formulario en menos de un minuto para recibir asistencia inmediata
-          </p>
-        </div>
-
+    <div className="min-h-screen bg-white p-4 sm:p-6 flex items-center justify-center">
+      <div className="w-full max-w-2xl mx-auto">
         {/* Progress Steps Section */}
-        <div className="max-w-md mx-auto">
+        <div className="mb-6">
           {/* Progress Bar */}
-          <div className="flex items-center mb-4">
+          <div className="flex items-center mb-6">
             <div className="flex-1 bg-gray-200 rounded-full h-2">
               <motion.div
                 animate={{
@@ -267,10 +242,6 @@ export default function ReparacionForm({ recordId, onSuccess, onError }: Reparac
             </span>
           </div>
         </div>
-      </motion.div>
-
-      {/* Form Card */}
-      <div className="bg-white/95 backdrop-blur-sm rounded-2xl sm:rounded-3xl p-4 xs:p-5 sm:p-6 md:p-8 shadow-2xl border border-white/20 landscape-compact">
         <AnimatePresence mode="wait">
           {/* Step 1: Datos Generales */}
           {currentStep === 1 && (
@@ -398,15 +369,32 @@ export default function ReparacionForm({ recordId, onSuccess, onError }: Reparac
                     type="text"
                     id="fechaInstalacion"
                     value={formData.fechaInstalacion}
+                    placeholder="DD/MM/YYYY"
+                    maxLength={10}
                     className={cn(
                       "w-full px-4 py-4 text-base rounded-xl border transition-all duration-200 focus:shadow-md focus:ring-2 touch-manipulation",
                       errors.fechaInstalacion 
                         ? "border-red-300 focus:ring-red-200 focus:border-red-400" 
                         : "border-gray-300 focus:ring-green-200 focus:border-green-400"
                     )}
-                    placeholder="Ej: Enero 2024 o hace 6 meses"
                     onChange={(e) => {
-                      setFormData(prev => ({ ...prev, fechaInstalacion: e.target.value }));
+                      const value = e.target.value;
+                      // Solo permitir números y barras
+                      const cleanValue = value.replace(/[^\d]/g, '');
+                      
+                      // Formatear automáticamente DD/MM/YYYY
+                      let formattedValue = '';
+                      if (cleanValue.length >= 1) {
+                        formattedValue = cleanValue.substring(0, 2);
+                      }
+                      if (cleanValue.length >= 3) {
+                        formattedValue += '/' + cleanValue.substring(2, 4);
+                      }
+                      if (cleanValue.length >= 5) {
+                        formattedValue += '/' + cleanValue.substring(4, 8);
+                      }
+                      
+                      setFormData(prev => ({ ...prev, fechaInstalacion: formattedValue }));
                       if (errors.fechaInstalacion) {
                         setErrors(prev => ({ ...prev, fechaInstalacion: '' }));
                       }
@@ -570,7 +558,7 @@ export default function ReparacionForm({ recordId, onSuccess, onError }: Reparac
         </AnimatePresence>
 
         {/* Navigation Buttons */}
-        <div className="flex flex-row items-center justify-between gap-3 flex-wrap mt-8 pt-6 border-t border-gray-200">
+        <div className="flex flex-row items-center justify-between gap-3 flex-wrap mt-8 pt-6 border-t border-gray-100 bg-white sticky bottom-0 pb-4 sm:pb-6 -mx-4 px-4 sm:-mx-6 sm:px-6 md:-mx-8 md:px-8">
           <button
             type="button"
             onClick={prevStep}
