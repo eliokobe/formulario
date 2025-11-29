@@ -17,6 +17,7 @@ export async function POST(request: NextRequest) {
       accionRealizada, 
       problemaDescripcion,
       detallesTrabajo,
+      numeroSerie,
       fotoReparacion,
       facturaServicio 
     } = body;
@@ -29,8 +30,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate serial number if replacing charging point
+    if (accionRealizada === 'Sustituir el punto de recarga' && !numeroSerie) {
+      return NextResponse.json(
+        { error: 'El número de serie es requerido al sustituir el punto de recarga' },
+        { status: 400 }
+      );
+    }
+
     // Prepare data to update in Airtable
-    const updateData = {
+    const updateData: any = {
       Resultado: problemaSolucionado,
       Reparación: accionRealizada,
       Problema: problemaDescripcion,
@@ -38,6 +47,11 @@ export async function POST(request: NextRequest) {
       "Fecha pago": problemaSolucionado === 'Reparado' ? new Date().toISOString().split('T')[0] : undefined,
       Pagado: problemaSolucionado === 'Reparado',
     };
+
+    // Add serial number only if provided
+    if (numeroSerie) {
+      updateData["Número de serie"] = numeroSerie;
+    }
 
     // If we have a repairId, update existing record
     if (repairId) {

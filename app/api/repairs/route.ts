@@ -58,6 +58,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (resultado === 'Reparado' && reparacion === 'Sustituir el punto de recarga') {
+      const numeroSerie = body['Número de serie'];
+      if (!numeroSerie || (typeof numeroSerie === 'number' && isNaN(numeroSerie))) {
+        return NextResponse.json(
+          { error: 'El número de serie es requerido al sustituir el punto de recarga' },
+          { status: 400 }
+        );
+      }
+    }
+
     if (!detalles) {
       return NextResponse.json(
         { error: 'Los detalles de la reparación son obligatorios' },
@@ -125,6 +135,7 @@ export async function GET(request: NextRequest) {
       cuadroElectrico: fields['Cuadro eléctrico'] || '',
       detalles: fields['Detalles'] || '',
       problema: fields['Problema'] || '', // Mantener para compatibilidad con datos existentes
+      numeroSerie: fields['Número de serie'] || '',
       factura: fields['Factura'] || [],
       foto: fields['Foto'] || [],
       fotoEtiqueta: fields['Foto de la etiqueta'] || [],
@@ -198,6 +209,16 @@ export async function PUT(request: NextRequest) {
         }
       }
     });
+
+    // Handle Número de serie separately as it's a number field
+    if ('Número de serie' in body) {
+      const numeroSerie = body['Número de serie'];
+      if (typeof numeroSerie === 'number' && !isNaN(numeroSerie)) {
+        fieldsToUpdate['Número de serie'] = numeroSerie;
+      } else if (numeroSerie === null || numeroSerie === undefined) {
+        fieldsToUpdate['Número de serie'] = null;
+      }
+    }
 
     if (Object.keys(fieldsToUpdate).length > 0) {
       await updateRepairRecord(targetRecordId, fieldsToUpdate);

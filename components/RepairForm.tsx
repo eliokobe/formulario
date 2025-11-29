@@ -53,6 +53,7 @@ export function RepairForm({
     reparacion: '', // Single option
     cuadroElectrico: '', // Single option
     detalles: '', // Campo que siempre aparece
+    numeroSerie: '', // Número de serie cuando se sustituye el punto de recarga
   });
   
   const [files, setFiles] = useState({
@@ -97,6 +98,7 @@ export function RepairForm({
           reparacion: isRepaired ? data.reparacion || '' : '',
           cuadroElectrico: isRepaired ? data.cuadroElectrico || '' : '',
           detalles: data.detalles || data.problema || '', // Usar detalles o problema como fallback
+          numeroSerie: data.numeroSerie || '',
         }));
         setExistingAttachments({
           factura: Array.isArray(data.factura) ? data.factura : [],
@@ -135,6 +137,7 @@ export function RepairForm({
           reparacion: isRepaired ? data.reparacion || '' : '',
           cuadroElectrico: isRepaired ? data.cuadroElectrico || '' : '',
           detalles: data.detalles || data.problema || '', // Usar detalles o problema como fallback
+          numeroSerie: data.numeroSerie || '',
         }));
         setExistingAttachments({
           factura: Array.isArray(data.factura) ? data.factura : [],
@@ -185,6 +188,10 @@ export function RepairForm({
         // El campo detalles ahora es siempre requerido
         if (!formData.detalles.trim()) {
           newErrors.detalles = 'Describe los detalles de la reparación';
+        }
+        // Validar número de serie si se sustituye el punto de recarga
+        if (formData.reparacion === 'Sustituir el punto de recarga' && !formData.numeroSerie.trim()) {
+          newErrors.numeroSerie = 'El número de serie es requerido al sustituir el punto de recarga';
         }
         break;
         
@@ -254,6 +261,7 @@ export function RepairForm({
           ? formData.cuadroElectrico || undefined
           : undefined,
         Detalles: formData.detalles, // Siempre enviamos los detalles
+        "Número de serie": formData.numeroSerie ? parseFloat(formData.numeroSerie) : undefined,
         Técnico: formData.tecnico,
         Cliente: formData.cliente,
         Dirección: formData.direccion,
@@ -329,6 +337,7 @@ export function RepairForm({
       // Ya no limpiamos los detalles, se mantienen siempre
       reparacion: resultado === 'No reparado' ? '' : prev.reparacion,
       cuadroElectrico: resultado === 'No reparado' ? '' : prev.cuadroElectrico,
+      numeroSerie: resultado === 'No reparado' ? '' : prev.numeroSerie,
     }));
 
     setErrors(prev => ({
@@ -345,7 +354,9 @@ export function RepairForm({
       ...prev,
       reparacion,
       // Si no es "Reparar el cuadro eléctrico", limpiar la selección del cuadro
-      cuadroElectrico: reparacion === 'Reparar el cuadro eléctrico' ? prev.cuadroElectrico : ''
+      cuadroElectrico: reparacion === 'Reparar el cuadro eléctrico' ? prev.cuadroElectrico : '',
+      // Si no es "Sustituir el punto de recarga", limpiar el número de serie
+      numeroSerie: reparacion === 'Sustituir el punto de recarga' ? prev.numeroSerie : ''
     }));
     
     if (errors.reparacion) {
@@ -616,6 +627,34 @@ export function RepairForm({
                       )}
                     </motion.div>
                   )}
+
+                  {formData.reparacion === 'Sustituir el punto de recarga' && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                    >
+                      <label htmlFor="numeroSerie" className="block text-sm font-medium text-gray-700 mb-2">
+                        Número de serie del nuevo punto de recarga *
+                      </label>
+                      <input
+                        type="number"
+                        id="numeroSerie"
+                        value={formData.numeroSerie}
+                        onChange={(e) => handleInputChange('numeroSerie', e.target.value)}
+                        className={cn(
+                          "w-full px-4 py-4 text-base rounded-xl border transition-all duration-200 focus:shadow-md focus:ring-2 touch-manipulation",
+                          errors.numeroSerie 
+                            ? "border-red-300 focus:ring-red-200 focus:border-red-400" 
+                            : "border-gray-300 focus:ring-green-200 focus:border-green-400"
+                        )}
+                        placeholder="Ingresa el número de serie..."
+                      />
+                      {errors.numeroSerie && (
+                        <p className="text-red-600 text-sm mt-1">{errors.numeroSerie}</p>
+                      )}
+                    </motion.div>
+                  )}
                 </motion.div>
               )}
 
@@ -698,7 +737,7 @@ export function RepairForm({
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Factura
+                  Factura (solo PDF)
                 </label>
                 <p className="text-sm text-gray-600 mb-4">
                   Puedes completar el parte ahora y adjuntar la factura más tarde.
@@ -707,7 +746,6 @@ export function RepairForm({
                   onFileSelect={(selected) => handleFileChange('factura', selected)}
                   accept={{
                     'application/pdf': ['.pdf'],
-                    'image/*': ['.png', '.jpg', '.jpeg'],
                   }}
                 />
               </div>

@@ -29,6 +29,7 @@ export function WorkReport({
     accionRealizada: '', // Múltiples opciones
     problemaDescripcion: '',
     detallesTrabajo: '', // Nueva descripción del trabajo realizado
+    numeroSerie: '', // Número de serie cuando se sustituye el punto de recarga
   });
   
   const [files, setFiles] = useState({
@@ -66,6 +67,10 @@ export function WorkReport({
       newErrors.detallesTrabajo = 'Describe el trabajo que has realizado';
     }
 
+    if (formData.accionRealizada === 'Sustituir el punto de recarga' && !formData.numeroSerie.trim()) {
+      newErrors.numeroSerie = 'El número de serie es requerido al sustituir el punto de recarga';
+    }
+
     if (!files.fotoReparacion) {
       newErrors.fotoReparacion = 'Sube una foto del punto de recarga después de la intervención';
     }
@@ -92,6 +97,7 @@ export function WorkReport({
         accionRealizada: formData.accionRealizada,
         problemaDescripcion: formData.problemaDescripcion,
         detallesTrabajo: formData.detallesTrabajo,
+        numeroSerie: formData.numeroSerie || undefined,
         // En un caso real, aquí subirías los archivos
         fotoReparacion: files.fotoReparacion?.name,
         facturaServicio: files.facturaServicio?.name,
@@ -305,6 +311,31 @@ export function WorkReport({
           )}
         </div>
 
+        {/* Número de serie - Solo visible cuando se sustituye el punto de recarga */}
+        {formData.accionRealizada === 'Sustituir el punto de recarga' && (
+          <div>
+            <label htmlFor="numeroSerie" className="block text-sm font-medium text-gray-700 mb-2">
+              Número de serie del nuevo punto de recarga *
+            </label>
+            <input
+              type="text"
+              id="numeroSerie"
+              value={formData.numeroSerie}
+              onChange={(e) => handleInputChange('numeroSerie', e.target.value)}
+              className={cn(
+                "w-full px-4 py-3 text-base rounded-xl border transition-all duration-200 focus:shadow-md focus:ring-2",
+                errors.numeroSerie 
+                  ? "border-red-300 focus:ring-red-200 focus:border-red-400" 
+                  : "border-gray-300 focus:ring-green-200 focus:border-green-400"
+              )}
+              placeholder="Ingresa el número de serie..."
+            />
+            {errors.numeroSerie && (
+              <p className="text-red-600 text-sm mt-1">{errors.numeroSerie}</p>
+            )}
+          </div>
+        )}
+
         {/* Descripción del trabajo realizado */}
         <div>
           <label htmlFor="detallesTrabajo" className="block text-sm font-medium text-gray-700 mb-2">
@@ -382,24 +413,13 @@ export function WorkReport({
           </label>
           <div className="flex flex-col space-y-3">
             <div className="flex items-center space-x-4">
-              <label className="flex items-center gap-2 px-4 py-2 bg-[#008606] text-white rounded-lg cursor-pointer hover:bg-[#1F4D11] transition-colors">
-                <Camera className="w-4 h-4" />
-                Fotografiar Factura
-                <input
-                  type="file"
-                  accept="image/*"
-                  capture="environment"
-                  onChange={(e) => handleFileChange('facturaServicio', e.target.files?.[0] || null)}
-                  className="hidden"
-                />
-              </label>
               
               <label className="flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg cursor-pointer hover:bg-gray-700 transition-colors">
                 <Upload className="w-4 h-4" />
-                Subir Archivo
+                Subir PDF
                 <input
                   type="file"
-                  accept="image/*,application/pdf"
+                  accept="application/pdf"
                   onChange={(e) => handleFileChange('facturaServicio', e.target.files?.[0] || null)}
                   className="hidden"
                 />
