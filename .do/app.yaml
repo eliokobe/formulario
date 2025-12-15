@@ -1,0 +1,44 @@
+name: formulario-app
+services:
+- name: web
+  source_dir: /
+  github:
+    repo: eliokobe/formulario
+    branch: main
+  dockerfile_path: Dockerfile
+  instance_count: 1
+  instance_size_slug: basic-xxs
+  http_port: 3000
+  routes:
+  - path: /
+  health_check:
+    http_path: /
+    initial_delay_seconds: 30
+    period_seconds: 10
+    timeout_seconds: 5
+    success_threshold: 1
+    failure_threshold: 3
+  envs:
+  - key: NODE_ENV
+    value: production
+  - key: PORT
+    value: "3000"
+  # Add your environment variables here:
+  - key: AIRTABLE_TOKEN
+    value: YOUR_AIRTABLE_TOKEN
+  - key: AIRTABLE_BASE_ID
+    value: YOUR_AIRTABLE_BASE_ID
+  - key: AIRTABLE_TABLE_REPARACIONES
+    value: Reparaciones
+  - key: AIRTABLE_TABLE_FORMULARIO
+    value: Formularios
+  - key: AIRTABLE_TABLE_NAME
+    value: Servicios
+  - key: AIRTABLE_TABLE_CLIENTES
+    value: Servicios
+  - key: AIRTABLE_TABLE_SERVICIOS
+    value: Servicios
+  - key: UPLOADTHING_SECRET
+    value: YOUR_UPLOADTHING_SECRET
+  - key: UPLOADTHING_APP_ID
+    value: YOUR_UPLOADTHING_APP_ID
