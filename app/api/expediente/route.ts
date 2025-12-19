@@ -46,6 +46,7 @@ export async function GET(request: NextRequest) {
       fotoCuadroElectrico: record.fields['Foto cuadro'],
       detalles: record.fields['Detalles'],
       fotoRoto: record.fields['Foto roto'],
+      cita: record.fields['Cita'], // Incluir la cita existente
     };
 
     return NextResponse.json(data);
@@ -138,6 +139,10 @@ export async function PUT(request: NextRequest) {
     if (body['Detalles']) {
       console.log('📝 Processing Detalles');
       fieldsToUpdate['Detalles'] = body['Detalles'];
+    }
+    if (body['Cita']) {
+      console.log('📝 Processing Cita:', body['Cita']);
+      fieldsToUpdate['Cita'] = body['Cita'];
     }
     
     // No actualizamos fecha automáticamente porque el campo no existe en Airtable

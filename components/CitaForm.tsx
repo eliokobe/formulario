@@ -29,6 +29,7 @@ export function CitaForm({ onComplete, onError }: CitaFormProps) {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTime, setSelectedTime] = useState<string>('');
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [trabajador, setTrabajador] = useState<string>(''); // Trabajador asignado
 
   // Cargar datos del servicio si existe en la URL
   useEffect(() => {
@@ -45,19 +46,23 @@ export function CitaForm({ onComplete, onError }: CitaFormProps) {
 
   const loadServiceData = async (id: string) => {
     try {
-      const response = await fetch(`/api/servicios?id=${id}`);
+      const response = await fetch(`/api/formularios?id=${id}`);
       
       if (response.ok) {
         const data = await response.json();
         setExistingData(data);
-        console.log('Datos del servicio cargados:', data);
+        // Obtener el trabajador asignado (puede venir en diferentes formatos)
+        const trabajadorAsignado = data['Técnico asignado'] || data['Trabajadores'] || '';
+        setTrabajador(trabajadorAsignado);
+        console.log('Datos del formulario cargados:', data);
+        console.log('Trabajador asignado:', trabajadorAsignado);
       } else {
-        console.error('Error al cargar datos del servicio:', response.status);
-        onError('Error al cargar los datos del servicio');
+        console.error('Error al cargar datos del formulario:', response.status);
+        onError('Error al cargar los datos del formulario');
       }
     } catch (error) {
-      console.error('Error al cargar datos del servicio:', error);
-      onError('Error de conexión al cargar los datos del servicio');
+      console.error('Error al cargar datos del formulario:', error);
+      onError('Error de conexión al cargar los datos del formulario');
     }
   };
 
@@ -86,11 +91,11 @@ export function CitaForm({ onComplete, onError }: CitaFormProps) {
       const isoDateTime = fechaHora.toISOString();
 
       const citaData = {
-        "Cita técnico": isoDateTime,
+        "Cita": isoDateTime,
       };
 
-      // Actualizar el registro en la tabla Servicios
-      const response = await fetch(`/api/servicios?id=${servicioId}`, {
+      // Actualizar el registro en la tabla Formularios
+      const response = await fetch(`/api/formularios?id=${servicioId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(citaData),

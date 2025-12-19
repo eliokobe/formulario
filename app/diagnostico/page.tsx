@@ -15,7 +15,6 @@ export default function DiagnosticoPage() {
   const handleSupportComplete = () => {
     setStatus('success');
     setMessage('');
-    showToast('¡Solicitud enviada exitosamente!', 'success');
   };
 
   const handleSupportError = (error: string) => {
@@ -52,7 +51,7 @@ export default function DiagnosticoPage() {
               transition={{ delay: 0.3 }}
               className="text-2xl font-bold text-gray-900 mb-2"
             >
-              ¡Solicitud Enviada!
+              Cita agendada
             </motion.h2>
             <motion.p 
               initial={{ opacity: 0, y: 20 }}
@@ -60,7 +59,7 @@ export default function DiagnosticoPage() {
               transition={{ delay: 0.4 }}
               className="text-gray-600 mb-6"
             >
-              Nuestro equipo técnico se pondrá en contacto contigo lo antes posible.
+              Nuestro equipo se pondrá en contacto con usted en la fecha y hora agendada.
             </motion.p>
           </motion.div>
         </div>

@@ -11,9 +11,24 @@ export function generateTimeSlots(date: Date): string[] {
 
   const slots: string[] = [];
   
-  // Generar slots de 9:00 a 20:00 con intervalos de 1 hora
-  for (let hour = 9; hour <= 20; hour++) {
-    slots.push(`${hour.toString().padStart(2, '0')}:00`);
+  // Generar slots de 9:00 a 14:00 con intervalos de 15 minutos
+  for (let hour = 9; hour < 14; hour++) {
+    for (let minute = 0; minute < 60; minute += 15) {
+      slots.push(`${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`);
+    }
+  }
+  
+  // Añadir el slot de las 14:00
+  slots.push('14:00');
+  
+  // Generar slots de 15:00 a 18:00 con intervalos de 15 minutos
+  for (let hour = 15; hour <= 18; hour++) {
+    for (let minute = 0; minute < 60; minute += 15) {
+      // No incluir slots después de las 18:00
+      if (hour === 18 && minute > 0) break;
+      
+      slots.push(`${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`);
+    }
   }
 
   return slots;

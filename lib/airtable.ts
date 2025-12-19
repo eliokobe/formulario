@@ -604,3 +604,30 @@ export async function uploadImageToServiciosAirtable(recordId: string, fieldName
   console.log(`✅ Successfully uploaded ${filename} to ${fieldName} in Servicios`);
 }
 
+// Función para obtener todas las citas ocupadas en una fecha específica de la tabla Formularios
+export async function getCitasOcupadasByDate(fecha: Date): Promise<any[]> {
+  if (!AIRTABLE_TABLE_FORMULARIO) {
+    throw new Error('AIRTABLE_TABLE_FORMULARIO is not configured');
+  }
+  
+  // Crear la fórmula para filtrar por fecha en la columna Cita
+  const filterFormula = `AND(
+    NOT({Cita} = BLANK()),
+    IS_SAME({Cita}, DATETIME_PARSE('${fecha.toISOString().split('T')[0]}'), 'day')
+  )`;
+  
+  try {
+    const records = await listRecords(AIRTABLE_TABLE_FORMULARIO, {
+      filterByFormula: filterFormula,
+    });
+    
+    return records.map(record => ({
+      id: record.id,
+      cita: record.fields['Cita'],
+      cliente: record.fields['Cliente'],
+    }));
+  } catch (error) {
+    console.error('Error al obtener citas ocupadas por fecha:', error);
+    throw new Error('Failed to get citas ocupadas by date');
+  }
+}

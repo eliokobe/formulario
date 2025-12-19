@@ -66,7 +66,7 @@ export function RepairForm({
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const recordParam = params.get('id');
+    const recordParam = params.get('id') || params.get('record');
     const expedienteParam = params.get('expediente');
 
     if (recordParam) {
@@ -93,7 +93,7 @@ export function RepairForm({
           ...prev,
           cliente: data.cliente || '',
           direccion: data.direccion || '',
-          tecnico: data.tecnico || '',
+          tecnico: Array.isArray(data.tecnico) ? data.tecnico[0] || '' : data.tecnico || '',
           resultado: data.resultado || '',
           reparacion: isRepaired ? data.reparacion || '' : '',
           cuadroElectrico: isRepaired ? data.cuadroElectrico || '' : '',
@@ -132,7 +132,7 @@ export function RepairForm({
           ...prev,
           cliente: data.cliente || '',
           direccion: data.direccion || '',
-          tecnico: data.tecnico || '',
+          tecnico: Array.isArray(data.tecnico) ? data.tecnico[0] || '' : data.tecnico || '',
           resultado: data.resultado || '',
           reparacion: isRepaired ? data.reparacion || '' : '',
           cuadroElectrico: isRepaired ? data.cuadroElectrico || '' : '',
@@ -168,7 +168,8 @@ export function RepairForm({
         if (!formData.direccion.trim()) {
           newErrors.direccion = 'La dirección es requerida';
         }
-        if (!formData.tecnico.trim()) {
+        const tecnicoStr = typeof formData.tecnico === 'string' ? formData.tecnico : '';
+        if (!tecnicoStr.trim()) {
           newErrors.tecnico = 'El técnico es requerido';
         }
         break;

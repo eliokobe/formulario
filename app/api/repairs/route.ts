@@ -98,11 +98,11 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const recordId = searchParams.get('record');
+    const recordId = searchParams.get('record') || searchParams.get('id');
     const expediente = searchParams.get('expediente');
 
     if (!recordId && !expediente) {
-      return NextResponse.json({ error: 'Se requiere record o expediente' }, { status: 400 });
+      return NextResponse.json({ error: 'Se requiere record/id o expediente' }, { status: 400 });
     }
 
     let record;

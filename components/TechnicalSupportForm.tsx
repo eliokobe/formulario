@@ -5,11 +5,16 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { FileUpload } from '@/components/ui/file-upload';
 import { uploadFiles } from '@/lib/upload';
+import { Calendar } from './Calendar';
+import { TimeSlots } from './TimeSlots';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
 import { 
   Loader2, 
   CheckCircle, 
   ChevronLeft, 
-  ChevronRight
+  ChevronRight,
+  Calendar as CalendarIcon
 } from 'lucide-react';
 
 const steps = [
@@ -18,6 +23,7 @@ const steps = [
   { id: 3, title: 'Fotos Adicionales' },
   { id: 4, title: 'Detalles' },
   { id: 5, title: 'Información Técnica' },
+  { id: 6, title: 'Seleccionar Cita' },
 ];
 
 const problemOptions = [
@@ -79,9 +85,12 @@ export function TechnicalSupportForm({ onComplete, onError }: TechnicalSupportFo
   const [expediente, setExpediente] = useState<string>('');
   const [isEditMode, setIsEditMode] = useState(false);
   const [existingData, setExistingData] = useState<any>(null);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedTime, setSelectedTime] = useState<string>('');
+  const [trabajador, setTrabajador] = useState<string>(''); // Trabajador asignado
 
   const getTotalSteps = () => {
-    return 5;
+    return 6; // Actualizado a 6 pasos
   };
   
   const [formData, setFormData] = useState({
@@ -108,17 +117,31 @@ export function TechnicalSupportForm({ onComplete, onError }: TechnicalSupportFo
     const idParam = urlParams.get('id');
     const recordParam = urlParams.get('record');
     const expedienteParam = urlParams.get('expediente');
+    const trabajadorParam = urlParams.get('trabajador');
+    
+    console.log('🔍 URL Params:', { idParam, recordParam, expedienteParam, trabajadorParam });
+    console.log('🔍 Current URL:', window.location.href);
+    
+    // Si viene un trabajador en la URL, configurarlo
+    if (trabajadorParam) {
+      setTrabajador(trabajadorParam);
+    }
     
     // Priorizar id, luego record, luego expediente para compatibilidad
     if (idParam) {
+      console.log('✏️ Entrando en modo EDICIÓN por idParam');
       setRecordId(idParam);
       loadRecordData(idParam, 'record');
     } else if (recordParam) {
+      console.log('✏️ Entrando en modo EDICIÓN por recordParam');
       setRecordId(recordParam);
       loadRecordData(recordParam, 'record');
     } else if (expedienteParam) {
+      console.log('✏️ Entrando en modo EDICIÓN por expedienteParam');
       setExpediente(expedienteParam);
       loadRecordData(expedienteParam, 'expediente');
+    } else {
+      console.log('✨ Modo NUEVO REGISTRO - sin parámetros en URL');
     }
   }, []);
 
@@ -142,6 +165,20 @@ export function TechnicalSupportForm({ onComplete, onError }: TechnicalSupportFo
           fechaInstalacion: convertDateFromAirtable(data.fechaInstalacion || ''),
           detalles: data.detalles || '',
         }));
+        
+        // Si hay una cita existente, cargarla
+        if (data.cita) {
+          try {
+            const citaDate = new Date(data.cita);
+            setSelectedDate(citaDate);
+            const hours = citaDate.getHours().toString().padStart(2, '0');
+            const minutes = citaDate.getMinutes().toString().padStart(2, '0');
+            setSelectedTime(`${hours}:${minutes}`);
+            console.log('📅 Cita existente cargada:', data.cita);
+          } catch (error) {
+            console.error('Error al parsear cita existente:', error);
+          }
+        }
 
         // Prellenar archivos existentes si los hay
         // Nota: Los archivos de Airtable se mostrarían como links, no como File objects
@@ -172,16 +209,23 @@ export function TechnicalSupportForm({ onComplete, onError }: TechnicalSupportFo
         break;
         
       case 2:
-        if (files.fotoGeneral.length === 0) {
+        // Solo requerir fotos si no estamos en modo edición o si no hay fotos existentes
+        const hasExistingFotoGeneral = isEditMode && existingData?.fotoGeneral;
+        const hasExistingFotoEtiqueta = isEditMode && existingData?.fotoEtiqueta;
+        
+        if (files.fotoGeneral.length === 0 && !hasExistingFotoGeneral) {
           newErrors.fotoGeneral = 'Por favor, adjunta una foto general del punto de recarga';
         }
-        if (files.fotoEtiqueta.length === 0) {
+        if (files.fotoEtiqueta.length === 0 && !hasExistingFotoEtiqueta) {
           newErrors.fotoEtiqueta = 'Por favor, adjunta una foto de la etiqueta del punto de recarga';
         }
         break;
         
       case 3:
-        if (files.fotoCuadroElectrico.length === 0) {
+        // Solo requerir foto cuadro eléctrico si no hay una existente
+        const hasExistingFotoCuadro = isEditMode && existingData?.fotoCuadroElectrico;
+        
+        if (files.fotoCuadroElectrico.length === 0 && !hasExistingFotoCuadro) {
           newErrors.fotoCuadroElectrico = 'Por favor, adjunta una foto del cuadro eléctrico con la puerta abierta';
         }
         // fotoRoto es opcional, no se valida
@@ -230,11 +274,11 @@ export function TechnicalSupportForm({ onComplete, onError }: TechnicalSupportFo
 
   const nextStep = () => {
     if (validateStep(currentStep)) {
-      if (currentStep === 5) {
+      if (currentStep === 6) {
         handleSubmit();
         return;
       }
-      setCurrentStep(prev => Math.min(prev + 1, 5));
+      setCurrentStep(prev => Math.min(prev + 1, 6));
     }
   };
 
@@ -243,7 +287,7 @@ export function TechnicalSupportForm({ onComplete, onError }: TechnicalSupportFo
   };
 
   const handleSubmit = async () => {
-    if (currentStep === 5 && !validateStep(currentStep)) return;
+    if (currentStep === 6 && !validateStep(currentStep)) return;
     
     setIsSubmitting(true);
     
@@ -267,6 +311,21 @@ export function TechnicalSupportForm({ onComplete, onError }: TechnicalSupportFo
         fotoRotoUploads = await uploadFiles(files.fotoRoto);
       }
 
+      // Crear fecha y hora en formato ISO 8601 para Airtable
+      let citaISO = null;
+      if (selectedDate && selectedTime) {
+        const [hours, minutes] = selectedTime.split(':');
+        const fechaHora = new Date(selectedDate);
+        fechaHora.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+        citaISO = fechaHora.toISOString();
+        console.log('📅 Cita programada:', {
+          fecha: selectedDate,
+          hora: selectedTime,
+          iso: citaISO,
+          fechaLocal: fechaHora.toLocaleString('es-ES')
+        });
+      }
+
       const supportData = {
         "Cliente": formData.cliente,
         "Teléfono": formData.telefono,
@@ -278,6 +337,7 @@ export function TechnicalSupportForm({ onComplete, onError }: TechnicalSupportFo
         "Foto cuadro": fotoCuadroElectricoUploads,
         "Foto roto": fotoRotoUploads.length > 0 ? fotoRotoUploads : undefined,
         "Detalles": formData.detalles,
+        "Cita": citaISO, // Agregar la cita seleccionada
       };
 
       // Decidir si crear nuevo registro o actualizar existente
@@ -296,7 +356,7 @@ export function TechnicalSupportForm({ onComplete, onError }: TechnicalSupportFo
 
         console.log('Registro actualizado:', supportData);
       } else {
-        // Crear nuevo registro (implementación futura si es necesario)
+        // Crear nuevo registro
         const response = await fetch('/api/technical-support', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -307,6 +367,7 @@ export function TechnicalSupportForm({ onComplete, onError }: TechnicalSupportFo
           throw new Error('Error al crear la solicitud');
         }
 
+        const result = await response.json();
         console.log('Nueva solicitud creada:', supportData);
       }
       
@@ -327,6 +388,7 @@ export function TechnicalSupportForm({ onComplete, onError }: TechnicalSupportFo
       case 3: return 'Fotos Adicionales';
       case 4: return 'Explica en detalles la incidencia';
       case 5: return 'Información Técnica del Punto de Recarga';
+      case 6: return 'Cita Remota';
       default: return '';
     }
   };
@@ -482,8 +544,15 @@ export function TechnicalSupportForm({ onComplete, onError }: TechnicalSupportFo
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Foto general del punto de recarga *
+                  Foto general del punto de recarga {isEditMode && existingData?.fotoGeneral ? '' : '*'}
                 </label>
+                {isEditMode && existingData?.fotoGeneral && (
+                  <div className="mb-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                    <p className="text-sm text-green-700">
+                      Ya tienes fotos adjuntas. Puedes adjuntar nuevas o dejar las existentes.
+                    </p>
+                  </div>
+                )}
                 <p className="text-sm text-gray-600 mb-4">
                   Toca aquí para tomar una foto o seleccionar una imagen de tu galería
                 </p>
@@ -502,8 +571,15 @@ export function TechnicalSupportForm({ onComplete, onError }: TechnicalSupportFo
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Foto de la etiqueta del punto de recarga *
+                  Foto de la etiqueta del punto de recarga {isEditMode && existingData?.fotoEtiqueta ? '' : '*'}
                 </label>
+                {isEditMode && existingData?.fotoEtiqueta && (
+                  <div className="mb-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                    <p className="text-sm text-green-700">
+                      Ya tienes fotos adjuntas. Puedes adjuntar nuevas o dejar las existentes.
+                    </p>
+                  </div>
+                )}
                 <p className="text-sm text-gray-600 mb-4">
                   Busca la etiqueta con el número de serie y toma una foto clara
                 </p>
@@ -537,8 +613,15 @@ export function TechnicalSupportForm({ onComplete, onError }: TechnicalSupportFo
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Foto del cuadro eléctrico del cargador *
+                  Foto del cuadro eléctrico del cargador {isEditMode && existingData?.fotoCuadroElectrico ? '' : '*'}
                 </label>
+                {isEditMode && existingData?.fotoCuadroElectrico && (
+                  <div className="mb-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                    <p className="text-sm text-green-700">
+                      Ya tienes fotos adjuntas. Puedes adjuntar nuevas o dejar las existentes.
+                    </p>
+                  </div>
+                )}
                 <p className="text-sm text-gray-600 mb-4">
                   Abre la puerta del cuadro eléctrico y toma una foto clara del interior
                 </p>
@@ -726,6 +809,79 @@ export function TechnicalSupportForm({ onComplete, onError }: TechnicalSupportFo
               </div>
             </motion.div>
           )}
+
+          {/* Step 6: Selección de Cita */}
+          {currentStep === 6 && (
+            <motion.div
+              key="step-6"
+              initial={{ opacity: 0, x: 50 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -50 }}
+              className="space-y-6"
+            >
+              <div className="mb-6">
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3 leading-relaxed">
+                  {isEditMode && selectedDate && selectedTime ? 'Modificar cita remota' : 'Selecciona fecha y hora de la cita remota con un técnico especializado'}
+                </h2>
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <p className="text-sm text-gray-700 leading-relaxed">
+                    <span className="font-semibold text-gray-900">Importante:</span> Debes estar en frente del punto de recarga a la fecha y hora seleccionada. El técnico te contactará por <span className="font-semibold">llamada telefónica</span>. En caso de no poder contactarte por llamada, te enviará un <span className="font-semibold">WhatsApp</span> para brindarte asistencia remota.
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-6">
+                {/* Selección de fecha */}
+                <div>
+                  <Calendar
+                    selectedDate={selectedDate}
+                    onDateSelect={(date) => {
+                      setSelectedDate(date);
+                      setSelectedTime(''); // Reset time selection when date changes
+                      if (errors.fecha) {
+                        setErrors(prev => ({ ...prev, fecha: '' }));
+                      }
+                    }}
+                    onError={onError}
+                  />
+                  {errors.fecha && (
+                    <p className="text-red-600 text-sm mt-2 text-center">{errors.fecha}</p>
+                  )}
+                </div>
+
+                {/* Selección de hora */}
+                {selectedDate && (
+                  <div>
+                    <TimeSlots
+                      selectedDate={selectedDate}
+                      selectedTime={selectedTime}
+                      onTimeSelect={(time) => {
+                        setSelectedTime(time);
+                        if (errors.hora) {
+                          setErrors(prev => ({ ...prev, hora: '' }));
+                        }
+                      }}
+                    />
+                    {errors.hora && (
+                      <p className="text-red-600 text-sm mt-2 text-center">{errors.hora}</p>
+                    )}
+                  </div>
+                )}
+
+                {/* Resumen de la cita seleccionada */}
+                {selectedDate && selectedTime && (
+                  <div className="p-4 bg-green-50 rounded-xl border border-green-200">
+                    <div className="text-sm text-gray-700 text-center">
+                      <div className="font-semibold text-gray-900">Cita programada para:</div>
+                      <div className="text-lg font-bold text-[#008606] mt-1">
+                        {format(selectedDate, "EEEE, d 'de' MMMM", { locale: es })} - {selectedTime}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          )}
         </AnimatePresence>
 
         {/* Navigation Buttons */}
@@ -747,7 +903,7 @@ export function TechnicalSupportForm({ onComplete, onError }: TechnicalSupportFo
 
           <button
             type="button"
-            onClick={currentStep === 5 ? handleSubmit : nextStep}
+            onClick={currentStep === 6 ? handleSubmit : nextStep}
             disabled={isSubmitting}
             className="flex-1 min-w-[140px] flex items-center justify-center gap-2 bg-[#008606] hover:bg-[#008606]/90 active:scale-95 text-white font-semibold px-6 py-4 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl touch-manipulation"
           >
@@ -756,9 +912,10 @@ export function TechnicalSupportForm({ onComplete, onError }: TechnicalSupportFo
                 <Loader2 className="w-5 h-5 animate-spin" />
                 Enviando...
               </>
-            ) : currentStep === 5 ? (
+            ) : currentStep === 6 ? (
               <>
-                Enviar
+                <CheckCircle className="w-5 h-5" />
+                Enviar Solicitud
               </>
             ) : (
               <>
