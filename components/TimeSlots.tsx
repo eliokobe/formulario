@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { generateTimeSlots, isSlotInPast } from '@/lib/time-utils';
+import { generateTimeSlots, generateHourlyTimeSlots, isSlotInPast } from '@/lib/time-utils';
 import { cn } from '@/lib/utils';
 import { isWeekend, isBefore, startOfDay, format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -10,12 +10,13 @@ interface TimeSlotsProps {
   selectedDate: Date;
   selectedTime: string | null;
   onTimeSelect: (time: string) => void;
+  slotType?: 'hourly' | 'quarter'; // 'hourly' para cita (1h), 'quarter' para diagnóstico (15min)
 }
 
-export function TimeSlots({ selectedDate, selectedTime, onTimeSelect }: TimeSlotsProps) {
+export function TimeSlots({ selectedDate, selectedTime, onTimeSelect, slotType = 'quarter' }: TimeSlotsProps) {
   const [horasOcupadas, setHorasOcupadas] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const timeSlots = generateTimeSlots(selectedDate);
+  const timeSlots = slotType === 'hourly' ? generateHourlyTimeSlots(selectedDate) : generateTimeSlots(selectedDate);
 
   // Cargar horas ocupadas cuando cambia la fecha
   useEffect(() => {

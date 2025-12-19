@@ -1,6 +1,26 @@
 import { format, addMinutes, setHours, setMinutes, isWeekend, isAfter, isBefore, startOfDay } from 'date-fns';
 import { es } from 'date-fns/locale';
 
+// Generar franjas de 1 hora de 8:00 a 21:00 para formulario de cita
+export function generateHourlyTimeSlots(date: Date): string[] {
+  const today = startOfDay(new Date());
+  
+  // Skip weekends and past dates
+  if (isWeekend(date) || isBefore(startOfDay(date), today)) {
+    return [];
+  }
+
+  const slots: string[] = [];
+  
+  // Generar slots de 8:00 a 21:00 con intervalos de 1 hora
+  for (let hour = 8; hour <= 21; hour++) {
+    slots.push(`${hour.toString().padStart(2, '0')}:00`);
+  }
+
+  return slots;
+}
+
+// Generar franjas de 15 minutos para formulario de diagnóstico (9-14 y 15-18)
 export function generateTimeSlots(date: Date): string[] {
   const today = startOfDay(new Date());
   
