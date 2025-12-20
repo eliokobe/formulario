@@ -17,6 +17,7 @@ interface Servicio {
     'Email'?: string
     'Tipo de Servicio'?: string
     'Dirección'?: string
+    'Población'?: string
     'Estado'?: string
     'Fecha de Servicio'?: string
     'Descripción'?: string
@@ -243,8 +244,9 @@ export default function TecnicoPage() {
                   className="p-4 rounded-xl border-2 border-gray-200 hover:border-[#008606] bg-white cursor-pointer transition-all"
                   onClick={() => openServicioDetail(servicio)}
                 >
-                  <div className="mb-3">
-                    <h3 className="font-semibold text-gray-900 mb-2">
+                  {/* Nombre y estado en la misma línea */}
+                  <div className="flex items-start justify-between gap-2 mb-3">
+                    <h3 className="font-semibold text-gray-900 flex-1">
                       {(Array.isArray(servicio.fields.Cliente) ? servicio.fields.Cliente[0] : servicio.fields.Cliente) || 'Cliente sin nombre'}
                     </h3>
                     <Badge className={getEstadoBadgeColor(servicio.fields.Estado)}>
@@ -252,10 +254,18 @@ export default function TecnicoPage() {
                     </Badge>
                   </div>
                   
+                  {/* Dirección */}
                   {servicio.fields['Dirección'] && (
                     <div className="flex items-start gap-2 text-sm text-gray-600 mb-2">
                       <MapPin className="w-4 h-4 mt-0.5 text-[#008606] flex-shrink-0" />
                       <p className="truncate">{servicio.fields['Dirección']}</p>
+                    </div>
+                  )}
+                  
+                  {/* Población */}
+                  {servicio.fields['Población'] && (
+                    <div className="text-sm text-gray-600 mb-2 ml-6">
+                      <p className="truncate">{servicio.fields['Población']}</p>
                     </div>
                   )}
                   
