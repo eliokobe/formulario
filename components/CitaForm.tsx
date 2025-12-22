@@ -17,7 +17,7 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 
 interface CitaFormProps {
-  onComplete: () => void;
+  onComplete: (reparacionId?: string) => void;
   onError: (error: string) => void;
 }
 
@@ -105,8 +105,12 @@ export function CitaForm({ onComplete, onError }: CitaFormProps) {
         throw new Error('Error al programar la cita');
       }
 
+      const result = await response.json();
       console.log('Cita programada exitosamente:', citaData);
-      onComplete();
+      console.log('Reparación ID:', result.reparacionId);
+      
+      // Pasar el reparacionId al callback
+      onComplete(result.reparacionId);
 
     } catch (error: any) {
       const msg = typeof error?.message === 'string' ? error.message : 'Error al programar la cita. Inténtalo de nuevo.';

@@ -46,7 +46,6 @@ export function RepairForm({
     // Step 1: Datos Generales
     cliente: '',
     direccion: '',
-    tecnico: '',
 
     // Step 2: Reparación
     resultado: '',
@@ -93,7 +92,6 @@ export function RepairForm({
           ...prev,
           cliente: data.cliente || '',
           direccion: data.direccion || '',
-          tecnico: Array.isArray(data.tecnico) ? data.tecnico[0] || '' : data.tecnico || '',
           resultado: data.resultado || '',
           reparacion: isRepaired ? data.reparacion || '' : '',
           cuadroElectrico: isRepaired ? data.cuadroElectrico || '' : '',
@@ -132,7 +130,6 @@ export function RepairForm({
           ...prev,
           cliente: data.cliente || '',
           direccion: data.direccion || '',
-          tecnico: Array.isArray(data.tecnico) ? data.tecnico[0] || '' : data.tecnico || '',
           resultado: data.resultado || '',
           reparacion: isRepaired ? data.reparacion || '' : '',
           cuadroElectrico: isRepaired ? data.cuadroElectrico || '' : '',
@@ -167,10 +164,6 @@ export function RepairForm({
         }
         if (!formData.direccion.trim()) {
           newErrors.direccion = 'La dirección es requerida';
-        }
-        const tecnicoStr = typeof formData.tecnico === 'string' ? formData.tecnico : '';
-        if (!tecnicoStr.trim()) {
-          newErrors.tecnico = 'El técnico es requerido';
         }
         break;
         
@@ -266,7 +259,6 @@ export function RepairForm({
           : undefined,
         Detalles: formData.detalles, // Siempre enviamos los detalles
         "Número de serie": formData.numeroSerie ? parseFloat(formData.numeroSerie) : undefined,
-        Técnico: formData.tecnico,
         Cliente: formData.cliente,
         Dirección: formData.direccion,
         Factura: facturaUploads.length > 0 ? facturaUploads : undefined,
@@ -477,34 +469,6 @@ export function RepairForm({
                 </div>
                 {errors.direccion && (
                   <p className="text-red-600 text-sm mt-1">{errors.direccion}</p>
-                )}
-              </div>
-
-              <div>
-                <label htmlFor="tecnico" className="block text-sm font-medium text-gray-700 mb-2">
-                  Técnico *
-                </label>
-                <div className="relative">
-                  <User className="absolute left-3 top-4 w-4 h-4 text-gray-400" />
-                  <input
-                    type="text"
-                    id="tecnico" 
-                    value={formData.tecnico}
-                    onChange={(e) => handleInputChange('tecnico', e.target.value)}
-                    readOnly={isEditMode}
-                    className={cn(
-                      "w-full pl-10 pr-4 py-4 text-base rounded-xl border transition-all duration-200 focus:shadow-md focus:ring-2",
-                      isEditMode
-                        ? "bg-gray-100 border-gray-200 text-gray-700 cursor-not-allowed focus:ring-0 focus:border-gray-200"
-                        : errors.tecnico 
-                          ? "border-red-300 focus:ring-red-200 focus:border-red-400" 
-                          : "border-gray-300 focus:ring-green-200 focus:border-green-400"
-                    )}
-                    placeholder="Nombre del técnico"
-                  />
-                </div>
-                {errors.tecnico && (
-                  <p className="text-red-600 text-sm mt-1">{errors.tecnico}</p>
                 )}
               </div>
             </motion.div>
