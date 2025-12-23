@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
     
     const resultado = typeof body.Resultado === 'string' ? body.Resultado.trim() : '';
     const reparacion = typeof body.Reparación === 'string' ? body.Reparación.trim() : '';
-    const cuadroElectrico = typeof body['Cuadro eléctrico'] === 'string' ? body['Cuadro eléctrico'].trim() : '';
+    const material = typeof body.Material === 'string' ? body.Material.trim() : '';
     const detalles = typeof body.Detalles === 'string' ? body.Detalles.trim() : '';
 
     // Validation - only require essential fields
@@ -51,9 +51,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (resultado === 'Reparado' && reparacion === 'Reparar el cuadro eléctrico' && !cuadroElectrico) {
+    if (resultado === 'Reparado' && (reparacion === 'Reparar el cuadro eléctrico' || reparacion === 'Sustituir el punto de recarga') && !material) {
       return NextResponse.json(
-        { error: 'Selecciona qué se reparó en el cuadro eléctrico' },
+        { error: 'Selecciona el material utilizado' },
         { status: 400 }
       );
     }
@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
     body.Resultado = resultado;
     // Only set select fields if they have values, otherwise don't include them
     body.Reparación = reparacion || undefined;
-    body['Cuadro eléctrico'] = cuadroElectrico || undefined;
+    body.Material = material || undefined;
     body.Detalles = detalles;
 
     // Create the repair record
@@ -132,7 +132,8 @@ export async function GET(request: NextRequest) {
       direccion: fields['Dirección'] || '',
       resultado: fields['Resultado'] || '',
       reparacion: fields['Reparación'] || '',
-      cuadroElectrico: fields['Cuadro eléctrico'] || '',
+      material: fields['Material'] || fields['Cuadro eléctrico'] || '', // Usar Material, con fallback a Cuadro eléctrico para compatibilidad
+      cuadroElectrico: fields['Cuadro eléctrico'] || '', // Mantener para compatibilidad
       detalles: fields['Detalles'] || '',
       problema: fields['Problema'] || '', // Mantener para compatibilidad con datos existentes
       numeroSerie: fields['Número de serie'] || '',
@@ -178,12 +179,12 @@ export async function PUT(request: NextRequest) {
     const fieldsToUpdate: Record<string, any> = {};
 
     // Define fields that are select/multiple-select in Airtable
-    const selectFields = ['Reparación', 'Cuadro eléctrico'];
+    const selectFields = ['Reparación', 'Material'];
     
     const textFields: Array<[string, string]> = [
       ['Resultado', 'Resultado'],
       ['Reparación', 'Reparación'],
-      ['Cuadro eléctrico', 'Cuadro eléctrico'],
+      ['Material', 'Material'],
       ['Detalles', 'Detalles'],
       ['Técnico', 'Técnico'],
       ['Cliente', 'Cliente'],

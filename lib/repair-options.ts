@@ -8,11 +8,13 @@ export const serviciosOptions = [
 ];
 
 export const cuadroElectricoOptions = [
-  'Sobretensiones',
-  'Diferencial',
-  'Magnetotérmico',
+  'Cableado interno',
+  'Diferencial monofásico',
+  'Diferencial trifásico',
+  'Sobretensiones monofásico',
+  'Sobretensiones trifásico',
   'Gestor de potencia',
-  'Cableado interno'
+  'Cargador'
 ];
 
 // Opciones específicas para reparación de electrodomésticos

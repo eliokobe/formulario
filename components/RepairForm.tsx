@@ -50,7 +50,7 @@ export function RepairForm({
     // Step 2: Reparación
     resultado: '',
     reparacion: '', // Single option
-    cuadroElectrico: '', // Single option
+    material: '', // Material utilizado (antes cuadroElectrico)
     detalles: '', // Campo que siempre aparece
     numeroSerie: '', // Número de serie cuando se sustituye el punto de recarga
   });
@@ -94,7 +94,7 @@ export function RepairForm({
           direccion: data.direccion || '',
           resultado: data.resultado || '',
           reparacion: isRepaired ? data.reparacion || '' : '',
-          cuadroElectrico: isRepaired ? data.cuadroElectrico || '' : '',
+          material: isRepaired ? (data.material || data.cuadroElectrico || '') : '',
           detalles: data.detalles || data.problema || '', // Usar detalles o problema como fallback
           numeroSerie: data.numeroSerie ? String(data.numeroSerie) : '',
         }));
@@ -132,7 +132,7 @@ export function RepairForm({
           direccion: data.direccion || '',
           resultado: data.resultado || '',
           reparacion: isRepaired ? data.reparacion || '' : '',
-          cuadroElectrico: isRepaired ? data.cuadroElectrico || '' : '',
+          material: isRepaired ? (data.material || data.cuadroElectrico || '') : '',
           detalles: data.detalles || data.problema || '', // Usar detalles o problema como fallback
           numeroSerie: data.numeroSerie ? String(data.numeroSerie) : '',
         }));
@@ -175,8 +175,8 @@ export function RepairForm({
           if (!formData.reparacion.trim()) {
             newErrors.reparacion = 'Selecciona el tipo de reparación';
           }
-          if (formData.reparacion === 'Reparar el cuadro eléctrico' && !formData.cuadroElectrico.trim()) {
-            newErrors.cuadroElectrico = 'Selecciona qué se reparó en el cuadro eléctrico';
+          if ((formData.reparacion === 'Reparar el cuadro eléctrico' || formData.reparacion === 'Sustituir el punto de recarga') && !formData.material.trim()) {
+            newErrors.material = 'Selecciona el material utilizado';
           }
         }
         // El campo detalles ahora es siempre requerido
@@ -254,8 +254,8 @@ export function RepairForm({
       const repairData: Record<string, any> = {
         Resultado: formData.resultado,
         Reparación: isRepaired ? formData.reparacion : undefined,
-        "Cuadro eléctrico": isRepaired && formData.reparacion === 'Reparar el cuadro eléctrico'
-          ? formData.cuadroElectrico || undefined
+        "Material": isRepaired && (formData.reparacion === 'Reparar el cuadro eléctrico' || formData.reparacion === 'Sustituir el punto de recarga')
+          ? formData.material || undefined
           : undefined,
         Detalles: formData.detalles, // Siempre enviamos los detalles
         "Número de serie": formData.numeroSerie ? parseFloat(formData.numeroSerie) : undefined,
@@ -270,13 +270,13 @@ export function RepairForm({
       // Use null instead of empty string for select fields to avoid Airtable errors
       if (!isRepaired && isEditMode) {
         repairData['Reparación'] = null;
-        repairData['Cuadro eléctrico'] = null;
+        repairData['Material'] = null;
       }
 
       if (isRepaired && isEditMode) {
         // Ya no necesitamos limpiar el campo problema, porque ahora usamos detalles siempre
-        if (formData.reparacion !== 'Reparar el cuadro eléctrico') {
-          repairData['Cuadro eléctrico'] = null;
+        if (formData.reparacion !== 'Reparar el cuadro eléctrico' && formData.reparacion !== 'Sustituir el punto de recarga') {
+          repairData['Material'] = null;
         }
       }
 
@@ -332,7 +332,7 @@ export function RepairForm({
       resultado,
       // Ya no limpiamos los detalles, se mantienen siempre
       reparacion: resultado === 'No reparado' ? '' : prev.reparacion,
-      cuadroElectrico: resultado === 'No reparado' ? '' : prev.cuadroElectrico,
+      material: resultado === 'No reparado' ? '' : prev.material,
       numeroSerie: resultado === 'No reparado' ? '' : prev.numeroSerie,
     }));
 
@@ -341,7 +341,7 @@ export function RepairForm({
       resultado: '',
       ...(resultado === 'Reparado'
         ? { detalles: '' }
-        : { reparacion: '', cuadroElectrico: '' }),
+        : { reparacion: '', material: '' }),
     }));
   };
 
@@ -349,8 +349,10 @@ export function RepairForm({
     setFormData(prev => ({
       ...prev,
       reparacion,
-      // Si no es "Reparar el cuadro eléctrico", limpiar la selección del cuadro
-      cuadroElectrico: reparacion === 'Reparar el cuadro eléctrico' ? prev.cuadroElectrico : '',
+      // Auto-rellenar material con "Cargador" cuando se selecciona "Sustituir el punto de recarga"
+      material: reparacion === 'Sustituir el punto de recarga' 
+        ? 'Cargador' 
+        : (reparacion === 'Reparar el cuadro eléctrico' ? prev.material : ''),
       // Si no es "Sustituir el punto de recarga", limpiar el número de serie
       numeroSerie: reparacion === 'Sustituir el punto de recarga' ? prev.numeroSerie : ''
     }));
@@ -358,19 +360,19 @@ export function RepairForm({
     if (errors.reparacion) {
       setErrors(prev => ({ ...prev, reparacion: '' }));
     }
-    if (errors.cuadroElectrico && reparacion !== 'Reparar el cuadro eléctrico') {
-      setErrors(prev => ({ ...prev, cuadroElectrico: '' }));
+    if (errors.material && reparacion !== 'Reparar el cuadro eléctrico' && reparacion !== 'Sustituir el punto de recarga') {
+      setErrors(prev => ({ ...prev, material: '' }));
     }
   };
 
-  const handleCuadroElectricoChange = (opcion: string) => {
+  const handleMaterialChange = (opcion: string) => {
     setFormData(prev => ({
       ...prev,
-      cuadroElectrico: opcion
+      material: opcion
     }));
 
-    if (errors.cuadroElectrico) {
-      setErrors(prev => ({ ...prev, cuadroElectrico: '' }));
+    if (errors.material) {
+      setErrors(prev => ({ ...prev, material: '' }));
     }
   };
 
@@ -565,7 +567,7 @@ export function RepairForm({
                       exit={{ opacity: 0, height: 0 }}
                     >
                       <label className="block text-sm font-medium text-gray-700 mb-3">
-                        ¿Qué has reparado en el cuadro eléctrico? *
+                        Material *
                       </label>
                       <div className="space-y-3">
                         {cuadroElectricoOptions.map((opcion) => (
@@ -573,25 +575,25 @@ export function RepairForm({
                             key={opcion}
                             className={cn(
                               "flex items-center p-4 sm:p-5 rounded-lg border cursor-pointer transition-all duration-200 hover:shadow-md active:scale-95 touch-manipulation",
-                              formData.cuadroElectrico === opcion
+                              formData.material === opcion
                                 ? "border-[#008606] bg-[#008606]/10"
                                 : "border-gray-300 hover:border-gray-400"
                             )}
                           >
                             <input
                               type="radio"
-                              name="cuadroElectrico"
+                              name="material"
                               value={opcion}
-                              checked={formData.cuadroElectrico === opcion}
-                              onChange={() => handleCuadroElectricoChange(opcion)}
+                              checked={formData.material === opcion}
+                              onChange={() => handleMaterialChange(opcion)}
                               className="w-5 h-5 text-[#008606] border-gray-300 focus:ring-[#008606]"
                             />
                             <span className="ml-3 text-sm sm:text-base text-gray-700">{opcion}</span>
                           </label>
                         ))}
                       </div>
-                      {errors.cuadroElectrico && (
-                        <p className="text-red-600 text-sm mt-2">{errors.cuadroElectrico}</p>
+                      {errors.material && (
+                        <p className="text-red-600 text-sm mt-2">{errors.material}</p>
                       )}
                     </motion.div>
                   )}
@@ -601,26 +603,61 @@ export function RepairForm({
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: 'auto' }}
                       exit={{ opacity: 0, height: 0 }}
+                      className="space-y-4"
                     >
-                      <label htmlFor="numeroSerie" className="block text-sm font-medium text-gray-700 mb-2">
-                        Número de serie del nuevo punto de recarga *
-                      </label>
-                      <input
-                        type="number"
-                        id="numeroSerie"
-                        value={formData.numeroSerie}
-                        onChange={(e) => handleInputChange('numeroSerie', e.target.value)}
-                        className={cn(
-                          "w-full px-4 py-4 text-base rounded-xl border transition-all duration-200 focus:shadow-md focus:ring-2 touch-manipulation",
-                          errors.numeroSerie 
-                            ? "border-red-300 focus:ring-red-200 focus:border-red-400" 
-                            : "border-gray-300 focus:ring-green-200 focus:border-green-400"
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-3">
+                          Material *
+                        </label>
+                        <div className="space-y-3">
+                          {cuadroElectricoOptions.map((opcion) => (
+                            <label
+                              key={opcion}
+                              className={cn(
+                                "flex items-center p-4 sm:p-5 rounded-lg border cursor-pointer transition-all duration-200 hover:shadow-md active:scale-95 touch-manipulation",
+                                formData.material === opcion
+                                  ? "border-[#008606] bg-[#008606]/10"
+                                  : "border-gray-300 hover:border-gray-400"
+                              )}
+                            >
+                              <input
+                                type="radio"
+                                name="material"
+                                value={opcion}
+                                checked={formData.material === opcion}
+                                onChange={() => handleMaterialChange(opcion)}
+                                className="w-5 h-5 text-[#008606] border-gray-300 focus:ring-[#008606]"
+                              />
+                              <span className="ml-3 text-sm sm:text-base text-gray-700">{opcion}</span>
+                            </label>
+                          ))}
+                        </div>
+                        {errors.material && (
+                          <p className="text-red-600 text-sm mt-2">{errors.material}</p>
                         )}
-                        placeholder="Ingresa el número de serie..."
-                      />
-                      {errors.numeroSerie && (
-                        <p className="text-red-600 text-sm mt-1">{errors.numeroSerie}</p>
-                      )}
+                      </div>
+                      
+                      <div>
+                        <label htmlFor="numeroSerie" className="block text-sm font-medium text-gray-700 mb-2">
+                          Número de serie del nuevo punto de recarga *
+                        </label>
+                        <input
+                          type="number"
+                          id="numeroSerie"
+                          value={formData.numeroSerie}
+                          onChange={(e) => handleInputChange('numeroSerie', e.target.value)}
+                          className={cn(
+                            "w-full px-4 py-4 text-base rounded-xl border transition-all duration-200 focus:shadow-md focus:ring-2 touch-manipulation",
+                            errors.numeroSerie 
+                              ? "border-red-300 focus:ring-red-200 focus:border-red-400" 
+                              : "border-gray-300 focus:ring-green-200 focus:border-green-400"
+                          )}
+                          placeholder="Ingresa el número de serie..."
+                        />
+                        {errors.numeroSerie && (
+                          <p className="text-red-600 text-sm mt-1">{errors.numeroSerie}</p>
+                        )}
+                      </div>
                     </motion.div>
                   )}
                 </motion.div>
