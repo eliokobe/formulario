@@ -20,7 +20,7 @@ export function generateHourlyTimeSlots(date: Date): string[] {
   return slots;
 }
 
-// Generar franjas de 15 minutos para formulario de diagnóstico (9-14 y 15-18)
+// Generar franjas de 30 minutos para formulario de diagnóstico (9-13:30 y 15-17:30)
 export function generateTimeSlots(date: Date): string[] {
   const today = startOfDay(new Date());
   
@@ -31,22 +31,16 @@ export function generateTimeSlots(date: Date): string[] {
 
   const slots: string[] = [];
   
-  // Generar slots de 9:00 a 14:00 con intervalos de 15 minutos
+  // Generar slots de 9:00 a 13:30 con intervalos de 30 minutos
   for (let hour = 9; hour < 14; hour++) {
-    for (let minute = 0; minute < 60; minute += 15) {
+    for (let minute = 0; minute < 60; minute += 30) {
       slots.push(`${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`);
     }
   }
   
-  // Añadir el slot de las 14:00
-  slots.push('14:00');
-  
-  // Generar slots de 15:00 a 18:00 con intervalos de 15 minutos
-  for (let hour = 15; hour <= 18; hour++) {
-    for (let minute = 0; minute < 60; minute += 15) {
-      // No incluir slots después de las 18:00
-      if (hour === 18 && minute > 0) break;
-      
+  // Generar slots de 15:00 a 17:30 con intervalos de 30 minutos
+  for (let hour = 15; hour <= 17; hour++) {
+    for (let minute = 0; minute <= 30; minute += 30) {
       slots.push(`${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`);
     }
   }
