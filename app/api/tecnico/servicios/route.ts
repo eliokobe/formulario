@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 const AIRTABLE_TOKEN = process.env.AIRTABLE_TOKEN
 const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID
 const AIRTABLE_TABLE_TECNICOS = 'Técnicos'
-const AIRTABLE_TABLE_SERVICIOS = process.env.AIRTABLE_TABLE_SERVICIOS || 'Servicios'
+const AIRTABLE_TABLE_REPARACIONES = process.env.AIRTABLE_TABLE_REPARACIONES || 'Reparaciones'
 
 // Helper function to fetch with retries
 async function fetchWithRetry(url: string, options: RequestInit, retries = 3): Promise<Response> {
@@ -30,13 +30,13 @@ async function fetchWithRetry(url: string, options: RequestInit, retries = 3): P
   throw new Error('Max retries reached')
 }
 
-// GET - Obtener servicios asignados a un técnico
+// GET - Obtener reparaciones asignadas a un técnico
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const tecnicoTelefono = searchParams.get('telefono')
 
-    console.log('=== OBTENIENDO SERVICIOS DEL TÉCNICO ===')
+    console.log('=== OBTENIENDO REPARACIONES DEL TÉCNICO ===')
     console.log('Teléfono técnico:', tecnicoTelefono)
 
     if (!tecnicoTelefono) {
@@ -54,25 +54,26 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Buscar servicios donde:
-    // 1. La columna "Teléfono técnico" (lookup) contiene el teléfono del técnico
-    // 2. El Estado es uno de: "Pendiente de aceptación", "Aceptado", "Citado", "Finalizado"
+    // Buscar reparaciones donde:
+    // 1. La columna "Técnicos" (linked record) tiene un registro con el teléfono del técnico
+    // 2. El Estado es uno de: "Asignado", "Aceptado", "Citado", "Reparado", "No reparado"
     const filterFormula = `AND(
       FIND("${tecnicoTelefono}", ARRAYJOIN({Teléfono técnico})),
       OR(
-        {Estado} = "Pendiente de aceptación",
+        {Estado} = "Asignado",
         {Estado} = "Aceptado",
         {Estado} = "Citado",
-        {Estado} = "Finalizado"
+        {Estado} = "Reparado",
+        {Estado} = "No reparado"
       )
     )`
 
     console.log('Filtro de búsqueda:', filterFormula)
 
-    const serviciosUrl = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${encodeURIComponent(AIRTABLE_TABLE_SERVICIOS)}?filterByFormula=${encodeURIComponent(filterFormula)}`
-    console.log('Buscando servicios en:', AIRTABLE_TABLE_SERVICIOS)
+    const reparacionesUrl = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${encodeURIComponent(AIRTABLE_TABLE_REPARACIONES)}?filterByFormula=${encodeURIComponent(filterFormula)}`
+    console.log('Buscando reparaciones en:', AIRTABLE_TABLE_REPARACIONES)
     
-    const response = await fetchWithRetry(serviciosUrl, {
+    const response = await fetchWithRetry(reparacionesUrl, {
       headers: {
         'Authorization': `Bearer ${AIRTABLE_TOKEN}`,
         'Content-Type': 'application/json',
@@ -81,25 +82,25 @@ export async function GET(request: NextRequest) {
 
     if (!response.ok) {
       const errorText = await response.text()
-      console.error('Error fetching servicios:', response.status, errorText)
+      console.error('Error fetching reparaciones:', response.status, errorText)
       return NextResponse.json(
-        { error: 'Error al obtener servicios' },
+        { error: 'Error al obtener reparaciones' },
         { status: response.status }
       )
     }
 
     const data = await response.json()
-    console.log(`✓ Servicios encontrados: ${data.records.length}`)
+    console.log(`✓ Reparaciones encontradas: ${data.records.length}`)
 
-    // Log de los servicios encontrados
-    data.records.forEach((servicio: any, index: number) => {
-      const clienteName = Array.isArray(servicio.fields['Cliente']) 
-        ? servicio.fields['Cliente'][0] 
-        : servicio.fields['Cliente'] || 'Sin nombre'
-      console.log(`  ${index + 1}. ${clienteName} - Estado: ${servicio.fields.Estado || 'Sin estado'}`)
+    // Log de las reparaciones encontradas
+    data.records.forEach((reparacion: any, index: number) => {
+      const clienteName = Array.isArray(reparacion.fields['Cliente']) 
+        ? reparacion.fields['Cliente'][0] 
+        : reparacion.fields['Cliente'] || 'Sin nombre'
+      console.log(`  ${index + 1}. ${clienteName} - Estado: ${reparacion.fields.Estado || 'Sin estado'}`)
     })
 
-    console.log('=== FIN OBTENCIÓN DE SERVICIOS ===')
+    console.log('=== FIN OBTENCIÓN DE REPARACIONES ===')
 
     return NextResponse.json({
       success: true,
@@ -107,7 +108,7 @@ export async function GET(request: NextRequest) {
     })
 
   } catch (error: any) {
-    console.error('❌ Error al obtener servicios del técnico:', error)
+    console.error('❌ Error al obtener reparaciones del técnico:', error)
     console.error('Stack:', error.stack)
     return NextResponse.json(
       { error: 'Error interno del servidor', details: error.message },
@@ -116,14 +117,14 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// PATCH - Actualizar estado o notas de un servicio
+// PATCH - Actualizar estado o notas de una reparación
 export async function PATCH(request: NextRequest) {
   try {
     const { servicioId, estado, notas, generarEnlaceCita, clienteId } = await request.json()
 
     if (!servicioId) {
       return NextResponse.json(
-        { error: 'ID de servicio no proporcionado' },
+        { error: 'ID de reparación no proporcionado' },
         { status: 400 }
       )
     }
@@ -163,8 +164,8 @@ export async function PATCH(request: NextRequest) {
       )
     }
 
-    // Actualizar el servicio en Airtable
-    const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${encodeURIComponent(AIRTABLE_TABLE_SERVICIOS)}/${servicioId}`
+    // Actualizar la reparación en Airtable
+    const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${encodeURIComponent(AIRTABLE_TABLE_REPARACIONES)}/${servicioId}`
     
     const response = await fetch(url, {
       method: 'PATCH',
@@ -179,23 +180,23 @@ export async function PATCH(request: NextRequest) {
 
     if (!response.ok) {
       const errorText = await response.text()
-      console.error('Error updating servicio:', response.status, errorText)
+      console.error('Error updating reparacion:', response.status, errorText)
       return NextResponse.json(
-        { error: 'Error al actualizar servicio' },
+        { error: 'Error al actualizar reparación' },
         { status: response.status }
       )
     }
 
-    const updatedServicio = await response.json()
+    const updatedReparacion = await response.json()
 
     return NextResponse.json({
       success: true,
-      servicio: updatedServicio,
+      servicio: updatedReparacion,
       enlaceCita: fieldsToUpdate['Enlace Cita'],
     })
 
   } catch (error: any) {
-    console.error('Error al actualizar servicio:', error)
+    console.error('Error al actualizar reparación:', error)
     return NextResponse.json(
       { error: 'Error interno del servidor', details: error.message },
       { status: 500 }

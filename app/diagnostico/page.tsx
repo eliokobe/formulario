@@ -10,11 +10,13 @@ import { CheckCircle } from 'lucide-react';
 export default function DiagnosticoPage() {
   const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState('');
+  const [citaResumen, setCitaResumen] = useState<string | null>(null);
   const { toast, showToast, hideToast } = useToast();
 
-  const handleSupportComplete = () => {
+  const handleSupportComplete = (info?: { resumen?: string }) => {
     setStatus('success');
     setMessage('');
+    setCitaResumen(info?.resumen ?? null);
   };
 
   const handleSupportError = (error: string) => {
@@ -26,6 +28,7 @@ export default function DiagnosticoPage() {
   const resetForm = () => {
     setStatus('idle');
     setMessage('');
+    setCitaResumen(null);
   };
 
   if (status === 'success') {
@@ -51,7 +54,7 @@ export default function DiagnosticoPage() {
               transition={{ delay: 0.3 }}
               className="text-2xl font-bold text-gray-900 mb-2"
             >
-              Cita agendada
+              {citaResumen ? `Cita agendada el ${citaResumen}` : 'Cita agendada'}
             </motion.h2>
             <motion.p 
               initial={{ opacity: 0, y: 20 }}

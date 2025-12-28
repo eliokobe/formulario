@@ -128,8 +128,14 @@ export async function GET(request: NextRequest) {
       id: record.id,
       expediente: fields['Expediente'] || '',
       tecnico: fields['Técnico'] || '',
+      'Técnico asignado': fields['Técnico'] || fields['Técnicos'] || '',
+      'Técnicos': fields['Técnicos'] || fields['Técnico'] || '',
+      Trabajadores: fields['Técnicos'] || fields['Técnico'] || '',
       cliente: fields['Cliente'] || '',
+      Cliente: fields['Cliente'] || '',
       direccion: fields['Dirección'] || '',
+      Dirección: fields['Dirección'] || '',
+      Teléfono: fields['Teléfono'] || '',
       resultado: fields['Resultado'] || '',
       reparacion: fields['Reparación'] || '',
       material: fields['Material'] || fields['Cuadro eléctrico'] || '', // Usar Material, con fallback a Cuadro eléctrico para compatibilidad
@@ -140,6 +146,8 @@ export async function GET(request: NextRequest) {
       factura: fields['Factura'] || [],
       foto: fields['Foto'] || [],
       fotoEtiqueta: fields['Foto de la etiqueta'] || [],
+      Cita: fields['Cita'] || '',
+      Estado: fields['Estado'] || '',
     });
   } catch (error: any) {
     console.error('Get repairs error:', error);
@@ -152,11 +160,11 @@ export async function GET(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   const { searchParams } = new URL(request.url);
-  const recordId = searchParams.get('record');
+  const recordId = searchParams.get('record') || searchParams.get('id');
   const expediente = searchParams.get('expediente');
 
   if (!recordId && !expediente) {
-    return NextResponse.json({ error: 'Se requiere record o expediente' }, { status: 400 });
+    return NextResponse.json({ error: 'Se requiere record/id o expediente' }, { status: 400 });
   }
 
   try {
@@ -179,7 +187,7 @@ export async function PUT(request: NextRequest) {
     const fieldsToUpdate: Record<string, any> = {};
 
     // Define fields that are select/multiple-select in Airtable
-    const selectFields = ['Reparación', 'Material'];
+    const selectFields = ['Reparación', 'Material', 'Estado'];
     
     const textFields: Array<[string, string]> = [
       ['Resultado', 'Resultado'],
@@ -189,6 +197,7 @@ export async function PUT(request: NextRequest) {
       ['Técnico', 'Técnico'],
       ['Cliente', 'Cliente'],
       ['Dirección', 'Dirección'],
+      ['Estado', 'Estado'],
     ];
 
     textFields.forEach(([bodyKey, airtableField]) => {
@@ -218,6 +227,24 @@ export async function PUT(request: NextRequest) {
         fieldsToUpdate['Número de serie'] = numeroSerie;
       } else if (numeroSerie === null || numeroSerie === undefined) {
         fieldsToUpdate['Número de serie'] = null;
+      }
+    }
+
+    // Handle Cita field (date/time field in ISO format)
+    if ('Cita' in body) {
+      const cita = body['Cita'];
+      if (typeof cita === 'string') {
+        try {
+          // Validate that it's a proper date
+          const testDate = new Date(cita);
+          if (!isNaN(testDate.getTime())) {
+            fieldsToUpdate['Cita'] = cita;
+          }
+        } catch (error) {
+          console.log('⚠️ Invalid Cita date format, skipping');
+        }
+      } else if (cita === null || cita === undefined) {
+        fieldsToUpdate['Cita'] = null;
       }
     }
 

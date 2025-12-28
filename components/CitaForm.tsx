@@ -24,45 +24,45 @@ interface CitaFormProps {
 export function CitaForm({ onComplete, onError }: CitaFormProps) {
   const [currentStep, setCurrentStep] = useState(1); // Paso 1: detalles, Paso 2: calendario
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [servicioId, setServicioId] = useState<string>('');
+  const [reparacionId, setReparacionId] = useState<string>('');
   const [existingData, setExistingData] = useState<any>(null);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTime, setSelectedTime] = useState<string>('');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [trabajador, setTrabajador] = useState<string>(''); // Trabajador asignado
 
-  // Cargar datos del servicio si existe en la URL
+  // Cargar datos de la reparación si existe en la URL
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const idParam = urlParams.get('id');
     
     if (idParam) {
-      setServicioId(idParam);
+      setReparacionId(idParam);
       loadServiceData(idParam);
     } else {
-      onError('ID de servicio no encontrado en la URL');
+      onError('ID de reparación no encontrado en la URL');
     }
   }, []);
 
   const loadServiceData = async (id: string) => {
     try {
-      const response = await fetch(`/api/formularios?id=${id}`);
+      const response = await fetch(`/api/repairs?id=${id}`);
       
       if (response.ok) {
         const data = await response.json();
         setExistingData(data);
         // Obtener el trabajador asignado (puede venir en diferentes formatos)
-        const trabajadorAsignado = data['Técnico asignado'] || data['Trabajadores'] || '';
+        const trabajadorAsignado = data['Técnico asignado'] || data['Trabajadores'] || data['Técnicos'] || '';
         setTrabajador(trabajadorAsignado);
-        console.log('Datos del formulario cargados:', data);
+        console.log('Datos de la reparación cargados:', data);
         console.log('Trabajador asignado:', trabajadorAsignado);
       } else {
-        console.error('Error al cargar datos del formulario:', response.status);
-        onError('Error al cargar los datos del formulario');
+        console.error('Error al cargar datos de la reparación:', response.status);
+        onError('Error al cargar los datos de la reparación');
       }
     } catch (error) {
-      console.error('Error al cargar datos del formulario:', error);
-      onError('Error de conexión al cargar los datos del formulario');
+      console.error('Error al cargar datos de la reparación:', error);
+      onError('Error de conexión al cargar los datos de la reparación');
     }
   };
 
@@ -92,10 +92,11 @@ export function CitaForm({ onComplete, onError }: CitaFormProps) {
 
       const citaData = {
         "Cita": isoDateTime,
+        "Estado": "Citado"
       };
 
-      // Actualizar el registro en la tabla Formularios
-      const response = await fetch(`/api/formularios?id=${servicioId}`, {
+      // Actualizar el registro en la tabla Reparaciones
+      const response = await fetch(`/api/repairs?id=${reparacionId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(citaData),
@@ -107,10 +108,10 @@ export function CitaForm({ onComplete, onError }: CitaFormProps) {
 
       const result = await response.json();
       console.log('Cita programada exitosamente:', citaData);
-      console.log('Reparación ID:', result.reparacionId);
+      console.log('Reparación ID:', reparacionId);
       
       // Pasar el reparacionId al callback
-      onComplete(result.reparacionId);
+      onComplete(reparacionId);
 
     } catch (error: any) {
       const msg = typeof error?.message === 'string' ? error.message : 'Error al programar la cita. Inténtalo de nuevo.';
@@ -248,6 +249,7 @@ export function CitaForm({ onComplete, onError }: CitaFormProps) {
                 selectedTime={selectedTime}
                 onTimeSelect={handleTimeSelect}
                 slotType="hourly"
+                checkAvailability={false}
               />
               {errors.hora && (
                 <p className="text-red-600 text-sm mt-2 text-center">{errors.hora}</p>

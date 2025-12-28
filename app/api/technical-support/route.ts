@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createFormulario } from '@/lib/airtable';
+import { createFormulario, getFormularioById, updateServicioRecord } from '@/lib/airtable';
 
 export async function POST(request: NextRequest) {
   try {
@@ -41,6 +41,35 @@ export async function POST(request: NextRequest) {
     console.log('📝 formularioData keys:', Object.keys(formularioData));
 
     const result = await createFormulario(formularioData);
+
+    // Si el formulario está vinculado a un Servicio(s), actualizar también su campo "Cita" en la tabla Servicios
+    if (body.Cita) {
+      try {
+        const createdRecord = await getFormularioById(result.id);
+        const servicioLinkPlural = createdRecord?.fields?.['Servicios'];
+        const servicioLinkSingular = createdRecord?.fields?.['Servicio'];
+
+        // Los enlaces suelen venir como array de record IDs; priorizar campo plural
+        const servicioId = Array.isArray(servicioLinkPlural)?.length
+          ? servicioLinkPlural[0]
+          : Array.isArray(servicioLinkSingular)
+            ? servicioLinkSingular[0]
+            : undefined;
+
+        if (servicioId) {
+          await updateServicioRecord(servicioId, { Cita: body.Cita });
+          console.log(`✅ Cita sincronizada en Servicios (${servicioId})`);
+        } else {
+          console.log('ℹ️ No se encontró un Servicio(s) vinculado para sincronizar la Cita');
+        }
+      } catch (syncError: any) {
+        console.error('❌ Error al sincronizar Cita en Servicios:', syncError);
+        return NextResponse.json(
+          { error: 'Solicitud creada, pero no se pudo actualizar la Cita en Servicios', details: syncError.message },
+          { status: 500 }
+        );
+      }
+    }
 
     return NextResponse.json({ 
       id: result.id,

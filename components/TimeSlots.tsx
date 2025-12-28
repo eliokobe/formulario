@@ -11,19 +11,22 @@ interface TimeSlotsProps {
   selectedTime: string | null;
   onTimeSelect: (time: string) => void;
   slotType?: 'hourly' | 'quarter'; // 'hourly' para cita (1h), 'quarter' para diagnóstico (15min)
+  checkAvailability?: boolean; // Si debe verificar disponibilidad en Airtable
 }
 
-export function TimeSlots({ selectedDate, selectedTime, onTimeSelect, slotType = 'quarter' }: TimeSlotsProps) {
+export function TimeSlots({ selectedDate, selectedTime, onTimeSelect, slotType = 'quarter', checkAvailability = true }: TimeSlotsProps) {
   const [horasOcupadas, setHorasOcupadas] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const timeSlots = slotType === 'hourly' ? generateHourlyTimeSlots(selectedDate) : generateTimeSlots(selectedDate);
 
-  // Cargar horas ocupadas cuando cambia la fecha
+  // Cargar horas ocupadas cuando cambia la fecha (solo si checkAvailability es true)
   useEffect(() => {
-    if (selectedDate) {
+    if (selectedDate && checkAvailability) {
       loadHorasOcupadas();
+    } else {
+      setHorasOcupadas([]);
     }
-  }, [selectedDate]);
+  }, [selectedDate, checkAvailability]);
 
   const loadHorasOcupadas = async () => {
     setIsLoading(true);

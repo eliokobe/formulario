@@ -1,12 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { ArrowLeft, Calendar, FileText, User, MapPin, Phone, Mail, Clock, CheckCircle, Wrench } from 'lucide-react'
+import { ArrowLeft, Calendar, FileText, User, MapPin, Phone, Mail, Clock, CheckCircle, Wrench, LogOut } from 'lucide-react'
 
 interface Servicio {
   id: string
@@ -41,6 +41,24 @@ export default function TecnicoPage() {
   const [ocultarFinalizados, setOcultarFinalizados] = useState(true)
   const [showSuccess, setShowSuccess] = useState(false)
   const [successMessage, setSuccessMessage] = useState('')
+  const [acceptedServicioId, setAcceptedServicioId] = useState<string | null>(null)
+  const [successType, setSuccessType] = useState<'accepted' | 'rejected'>('accepted')
+
+  // Cargar sesión guardada al montar el componente
+  useEffect(() => {
+    const savedTecnico = localStorage.getItem('tecnicoData')
+    if (savedTecnico) {
+      try {
+        const data = JSON.parse(savedTecnico)
+        setTecnicoData(data)
+        setIsAuthenticated(true)
+        loadServicios(data.id, data.fields?.Teléfono)
+      } catch (err) {
+        console.error('Error al cargar sesión guardada:', err)
+        localStorage.removeItem('tecnicoData')
+      }
+    }
+  }, [])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -64,6 +82,9 @@ export default function TecnicoPage() {
         throw new Error(data.error || 'Error al autenticar')
       }
 
+      // Guardar datos del técnico en localStorage
+      localStorage.setItem('tecnicoData', JSON.stringify(data.tecnico))
+      
       setTecnicoData(data.tecnico)
       setIsAuthenticated(true)
       
@@ -98,6 +119,14 @@ export default function TecnicoPage() {
     }
   }
 
+  const handleLogout = () => {
+    localStorage.removeItem('tecnicoData')
+    setIsAuthenticated(false)
+    setTecnicoData(null)
+    setServicios([])
+    setTelefono('')
+  }
+
   const getEstadoBadgeColor = (estado?: string) => {
     return 'bg-[#008606]'
   }
@@ -111,20 +140,14 @@ export default function TecnicoPage() {
       return
     }
     
-    // Si el servicio está citado o finalizado, ir al parte de trabajo usando el ID de Reparaciones
-    if (estado === 'citado' || estado === 'finalizado' || estado === 'completado') {
-      const reparacionesField = servicio.fields.Reparaciones
-      const reparacionId = Array.isArray(reparacionesField) ? reparacionesField[0] : reparacionesField
-      
-      if (reparacionId) {
-        window.location.href = `/parte?id=${reparacionId}`
-      } else {
-        alert('Este servicio no tiene una reparación asociada')
-      }
+    // Si el servicio está citado, reparado o no reparado, ir al parte de trabajo
+    if (estado === 'citado' || estado === 'reparado' || estado === 'no reparado') {
+      // Como estamos trabajando directamente con reparaciones, el id es el id de la reparación
+      window.location.href = `/parte?id=${servicio.id}`
       return
     }
     
-    // En cualquier otro caso, abrir el modal de detalles
+    // En cualquier otro caso (Asignado), abrir el modal de detalles
     setSelectedServicio(servicio)
   }
 
@@ -183,21 +206,51 @@ export default function TecnicoPage() {
             <CheckCircle className="w-8 h-8 text-green-600" />
           </div>
           <h2 className="text-2xl font-bold text-gray-900 mb-2">
-            ¡Éxito!
+            {successType === 'accepted' ? 'Servicio Aceptado' : '¡Éxito!'}
           </h2>
           <p className="text-gray-600 mb-6">
             {successMessage}
           </p>
-          <button
-            onClick={() => {
-              setShowSuccess(false)
-              setSuccessMessage('')
-              loadServicios()
-            }}
-            className="w-full bg-[#008606] hover:bg-[#008606]/90 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl"
-          >
-            Volver al Portal
-          </button>
+          {successType === 'accepted' && acceptedServicioId ? (
+            <>
+              <p className="text-gray-700 font-medium mb-6">
+                ¿Quieres continuar para agendar la cita?
+              </p>
+              <div className="space-y-3">
+                <button
+                  onClick={() => {
+                    window.location.href = `/cita?id=${acceptedServicioId}`
+                  }}
+                  className="w-full bg-[#008606] hover:bg-[#008606]/90 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl"
+                >
+                  Sí, agendar cita
+                </button>
+                <button
+                  onClick={() => {
+                    setShowSuccess(false)
+                    setSuccessMessage('')
+                    setAcceptedServicioId(null)
+                    loadServicios()
+                  }}
+                  className="w-full bg-gray-100 hover:bg-gray-200 text-gray-900 font-semibold py-3 px-6 rounded-xl transition-all duration-200"
+                >
+                  No, volver al portal
+                </button>
+              </div>
+            </>
+          ) : (
+            <button
+              onClick={() => {
+                setShowSuccess(false)
+                setSuccessMessage('')
+                setAcceptedServicioId(null)
+                loadServicios()
+              }}
+              className="w-full bg-[#008606] hover:bg-[#008606]/90 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl"
+            >
+              Volver al Portal
+            </button>
+          )}
         </div>
       </div>
     )
@@ -207,9 +260,23 @@ export default function TecnicoPage() {
     <div className="min-h-screen bg-white flex items-center justify-center p-4">
       <div className="max-w-md w-full space-y-6">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">
-            {tecnicoData?.fields?.Nombre || 'Técnico'}
-          </h2>
+          <div className="flex justify-between items-start mb-2">
+            <div className="flex-1"></div>
+            <div className="flex-1">
+              <h2 className="text-2xl font-bold text-gray-900">
+                {tecnicoData?.fields?.Nombre || 'Técnico'}
+              </h2>
+            </div>
+            <div className="flex-1 flex justify-end">
+              <button
+                onClick={handleLogout}
+                className="text-gray-500 hover:text-red-600 transition-colors p-2"
+                title="Cerrar sesión"
+              >
+                <LogOut className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
           <p className="text-gray-600">Servicios Asignados</p>
         </div>
 
@@ -222,7 +289,7 @@ export default function TecnicoPage() {
                 onChange={(e) => setOcultarFinalizados(e.target.checked)}
                 className="w-4 h-4 rounded border-gray-300 text-[#008606] focus:ring-[#008606]"
               />
-              Ocultar finalizados
+              Ocultar finalizados (Reparado/No reparado)
             </label>
           </div>
           
@@ -232,13 +299,29 @@ export default function TecnicoPage() {
                 <Clock className="w-8 h-8 text-[#008606] animate-spin mx-auto mb-4" />
                 <p className="text-gray-600">Cargando servicios...</p>
               </div>
-            ) : servicios.filter(s => !ocultarFinalizados || s.fields.Estado !== 'Finalizado').length === 0 ? (
+            ) : servicios.filter(s => {
+              const estado = s.fields.Estado?.toLowerCase()
+              if (ocultarFinalizados) {
+                // Mostrar solo: Asignado, Aceptado, Citado
+                return estado === 'asignado' || estado === 'aceptado' || estado === 'citado'
+              }
+              // Mostrar todos (incluyendo Reparado y No reparado)
+              return true
+            }).length === 0 ? (
               <div className="text-center py-12">
                 <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                 <p className="text-gray-600">No tienes servicios asignados</p>
               </div>
             ) : (
-              servicios.filter(s => !ocultarFinalizados || s.fields.Estado !== 'Finalizado').map((servicio) => (
+              servicios.filter(s => {
+                const estado = s.fields.Estado?.toLowerCase()
+                if (ocultarFinalizados) {
+                  // Mostrar solo: Asignado, Aceptado, Citado
+                  return estado === 'asignado' || estado === 'aceptado' || estado === 'citado'
+                }
+                // Mostrar todos (incluyendo Reparado y No reparado)
+                return true
+              }).map((servicio) => (
                 <div 
                   key={servicio.id}
                   className="p-4 rounded-xl border-2 border-gray-200 hover:border-[#008606] bg-white cursor-pointer transition-all"
@@ -289,8 +372,10 @@ export default function TecnicoPage() {
               servicio={selectedServicio} 
               onSetServicio={setSelectedServicio}
               onLoadServicios={loadServicios}
-              onShowSuccess={(message: string) => {
+              onShowSuccess={(message: string, type: 'accepted' | 'rejected', servicioId?: string) => {
                 setSuccessMessage(message)
+                setSuccessType(type)
+                if (servicioId) setAcceptedServicioId(servicioId)
                 setShowSuccess(true)
               }}
             />
@@ -310,7 +395,7 @@ function DialogContentInner({
   servicio: Servicio
   onSetServicio: (s: Servicio | null) => void
   onLoadServicios: () => void
-  onShowSuccess: (message: string) => void
+  onShowSuccess: (message: string, type: 'accepted' | 'rejected', servicioId?: string) => void
 }) {
   const [actionLoading, setActionLoading] = useState(false)
 
@@ -334,7 +419,7 @@ function DialogContentInner({
 
       await onLoadServicios()
       onSetServicio(null)
-      onShowSuccess('Servicio aceptado correctamente')
+      onShowSuccess('Servicio aceptado correctamente', 'accepted', servicioId)
     } catch (err: any) {
       alert('Error al aceptar servicio: ' + err.message)
     } finally {
@@ -362,7 +447,7 @@ function DialogContentInner({
 
       await onLoadServicios()
       onSetServicio(null)
-      onShowSuccess('Servicio rechazado correctamente')
+      onShowSuccess('Servicio rechazado correctamente', 'rejected')
     } catch (err: any) {
       alert('Error al rechazar servicio: ' + err.message)
     } finally {
@@ -447,8 +532,7 @@ function DialogContentInner({
         </div>
       </DialogHeader>
 
-      <div className="space-y-4">{servicio.fields.Estado?.toLowerCase() === 'pendiente de aceptación' || 
-         servicio.fields.Estado?.toLowerCase() === 'pendiente de aceptacion' ? (
+      <div className="space-y-4">{servicio.fields.Estado?.toLowerCase() === 'asignado' ? (
           <>
             <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
               <h4 className="text-base font-semibold text-gray-900 mb-3">
@@ -628,14 +712,8 @@ function DialogContentInner({
             </Alert>
             <button
               onClick={() => {
-                const reparacionesField = servicio.fields.Reparaciones
-                const reparacionId = Array.isArray(reparacionesField) ? reparacionesField[0] : reparacionesField
-                
-                if (reparacionId) {
-                  window.open(`/parte?id=${reparacionId}`, '_blank')
-                } else {
-                  alert('Este servicio no tiene una reparación asociada')
-                }
+                // Como estamos trabajando directamente con reparaciones, el id es el id de la reparación
+                window.open(`/parte?id=${servicio.id}`, '_blank')
               }}
               className="w-full bg-[#008606] hover:bg-[#008606]/90 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl"
             >

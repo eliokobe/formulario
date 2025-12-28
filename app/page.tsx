@@ -12,7 +12,7 @@ export default function Home() {
   const [message, setMessage] = useState('');
   const { toast, showToast, hideToast } = useToast();
 
-  const handleSupportComplete = () => {
+  const handleSupportComplete = (_info?: { resumen?: string }) => {
     setStatus('success');
     setMessage('¡Tu solicitud de asistencia técnica ha sido enviada exitosamente!');
     showToast('¡Solicitud enviada exitosamente!', 'success');

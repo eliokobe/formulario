@@ -42,7 +42,7 @@ const physicalDamageOptions = [
 ];
 
 interface TechnicalSupportFormProps {
-  onComplete: () => void;
+  onComplete: (info?: { resumen?: string; citaISO?: string; fecha?: string; hora?: string }) => void;
   onError: (error: string) => void;
 }
 
@@ -266,6 +266,15 @@ export function TechnicalSupportForm({ onComplete, onError }: TechnicalSupportFo
           }
         }
         break;
+
+      case 6:
+        if (!selectedDate) {
+          newErrors.fecha = 'Selecciona una fecha para la cita';
+        }
+        if (!selectedTime) {
+          newErrors.hora = 'Selecciona una hora disponible';
+        }
+        break;
     }
 
     setErrors(newErrors);
@@ -287,7 +296,10 @@ export function TechnicalSupportForm({ onComplete, onError }: TechnicalSupportFo
   };
 
   const handleSubmit = async () => {
-    if (currentStep === 6 && !validateStep(currentStep)) return;
+    // Asegurar que la cita esté seleccionada antes de enviar
+    if (!validateStep(6)) {
+      return;
+    }
     
     setIsSubmitting(true);
     
@@ -313,11 +325,13 @@ export function TechnicalSupportForm({ onComplete, onError }: TechnicalSupportFo
 
       // Crear fecha y hora en formato ISO 8601 para Airtable
       let citaISO = null;
+      let citaResumen = '';
       if (selectedDate && selectedTime) {
         const [hours, minutes] = selectedTime.split(':');
         const fechaHora = new Date(selectedDate);
         fechaHora.setHours(parseInt(hours), parseInt(minutes), 0, 0);
         citaISO = fechaHora.toISOString();
+        citaResumen = `${format(selectedDate, "EEEE d 'de' MMMM", { locale: es })} a las ${selectedTime}`;
         console.log('📅 Cita programada:', {
           fecha: selectedDate,
           hora: selectedTime,
@@ -370,8 +384,13 @@ export function TechnicalSupportForm({ onComplete, onError }: TechnicalSupportFo
         const result = await response.json();
         console.log('Nueva solicitud creada:', supportData);
       }
-      
-      onComplete();
+
+      onComplete({
+        resumen: citaResumen,
+        citaISO: citaISO ?? undefined,
+        fecha: selectedDate ? format(selectedDate, "yyyy-MM-dd") : undefined,
+        hora: selectedTime || undefined,
+      });
 
     } catch (error: any) {
       const msg = typeof error?.message === 'string' ? error.message : 'Error al enviar la solicitud. Inténtalo de nuevo.';
