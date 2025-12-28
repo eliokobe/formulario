@@ -50,9 +50,9 @@ export async function POST(request: NextRequest) {
         const servicioLinkSingular = createdRecord?.fields?.['Servicio'];
 
         // Los enlaces suelen venir como array de record IDs; priorizar campo plural
-        const servicioId = Array.isArray(servicioLinkPlural)?.length
+        const servicioId = Array.isArray(servicioLinkPlural) && servicioLinkPlural.length > 0
           ? servicioLinkPlural[0]
-          : Array.isArray(servicioLinkSingular)
+          : Array.isArray(servicioLinkSingular) && servicioLinkSingular.length > 0
             ? servicioLinkSingular[0]
             : undefined;
 
