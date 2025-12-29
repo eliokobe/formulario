@@ -6,7 +6,8 @@ import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { ArrowLeft, Calendar, FileText, User, MapPin, Phone, Mail, Clock, CheckCircle, Wrench, LogOut } from 'lucide-react'
+import { ArrowLeft, Calendar, FileText, User, MapPin, Phone, Mail, Clock, CheckCircle, Wrench, LogOut, Filter } from 'lucide-react'
+import { Switch } from '@/components/ui/switch'
 
 interface Servicio {
   id: string
@@ -18,6 +19,7 @@ interface Servicio {
     'Tipo de Servicio'?: string
     'Dirección'?: string
     'Población'?: string
+    'Población del cliente'?: string | string[]
     'Estado'?: string
     'Fecha de Servicio'?: string
     'Descripción'?: string
@@ -26,6 +28,7 @@ interface Servicio {
     'Cita técnico'?: string
     'ID Cliente'?: string
     'Reparaciones'?: string | string[]
+    'Factura'?: string | string[]
   }
 }
 
@@ -257,43 +260,44 @@ export default function TecnicoPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center p-4">
-      <div className="max-w-md w-full space-y-6">
-        <div className="text-center">
+    <div className="min-h-screen bg-white lg:bg-gray-50 flex items-center justify-center p-4 lg:p-8">
+      <div className="max-w-md lg:max-w-6xl w-full space-y-6">
+        <div className="text-center lg:mb-8">
           <div className="flex justify-between items-start mb-2">
             <div className="flex-1"></div>
             <div className="flex-1">
-              <h2 className="text-2xl font-bold text-gray-900">
+              <h2 className="text-2xl lg:text-4xl font-bold text-gray-900">
                 {tecnicoData?.fields?.Nombre || 'Técnico'}
               </h2>
             </div>
             <div className="flex-1 flex justify-end">
               <button
                 onClick={handleLogout}
-                className="text-gray-500 hover:text-red-600 transition-colors p-2"
+                className="text-gray-500 hover:text-red-600 transition-colors p-2 lg:p-3"
                 title="Cerrar sesión"
               >
-                <LogOut className="w-5 h-5" />
+                <LogOut className="w-5 h-5 lg:w-6 lg:h-6" />
               </button>
             </div>
           </div>
-          <p className="text-gray-600">Servicios Asignados</p>
+          <p className="text-gray-600 lg:text-lg">Servicios Asignados</p>
         </div>
 
         <div className="space-y-4">
           <div className="flex justify-center items-center">
-            <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={ocultarFinalizados}
-                onChange={(e) => setOcultarFinalizados(e.target.checked)}
-                className="w-4 h-4 rounded border-gray-300 text-[#008606] focus:ring-[#008606]"
-              />
-              Ocultar finalizados (Reparado/No reparado)
-            </label>
+            <div className="bg-gray-50 lg:bg-white rounded-xl p-3 lg:p-4 border border-gray-200 lg:shadow-sm inline-flex items-center gap-3">
+              <Filter className="w-4 h-4 lg:w-5 lg:h-5 text-gray-600" />
+              <label className="flex items-center gap-3 text-sm lg:text-base font-medium text-gray-700 cursor-pointer">
+                <span>Ocultar finalizados</span>
+                <Switch
+                  checked={ocultarFinalizados}
+                  onCheckedChange={setOcultarFinalizados}
+                />
+              </label>
+            </div>
           </div>
           
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-3 lg:gap-4">
             {loadingServicios ? (
               <div className="text-center py-12">
                 <Clock className="w-8 h-8 text-[#008606] animate-spin mx-auto mb-4" />
@@ -301,11 +305,17 @@ export default function TecnicoPage() {
               </div>
             ) : servicios.filter(s => {
               const estado = s.fields.Estado?.toLowerCase()
+              // Para campos tipo file en Airtable: es un array vacío si no tiene archivos
+              const tieneFactura = Array.isArray(s.fields.Factura) && s.fields.Factura.length > 0
+              
               if (ocultarFinalizados) {
-                // Mostrar solo: Asignado, Aceptado, Citado
-                return estado === 'asignado' || estado === 'aceptado' || estado === 'citado'
+                // Mostrar: Asignado, Aceptado, Citado y finalizados SIN factura
+                return estado === 'asignado' || 
+                       estado === 'aceptado' || 
+                       estado === 'citado' ||
+                       ((estado === 'reparado' || estado === 'no reparado') && !tieneFactura)
               }
-              // Mostrar todos (incluyendo Reparado y No reparado)
+              // Mostrar todos
               return true
             }).length === 0 ? (
               <div className="text-center py-12">
@@ -315,21 +325,27 @@ export default function TecnicoPage() {
             ) : (
               servicios.filter(s => {
                 const estado = s.fields.Estado?.toLowerCase()
+                // Para campos tipo file en Airtable: es un array vacío si no tiene archivos
+                const tieneFactura = Array.isArray(s.fields.Factura) && s.fields.Factura.length > 0
+                
                 if (ocultarFinalizados) {
-                  // Mostrar solo: Asignado, Aceptado, Citado
-                  return estado === 'asignado' || estado === 'aceptado' || estado === 'citado'
+                  // Mostrar: Asignado, Aceptado, Citado y finalizados SIN factura
+                  return estado === 'asignado' || 
+                         estado === 'aceptado' || 
+                         estado === 'citado' ||
+                         ((estado === 'reparado' || estado === 'no reparado') && !tieneFactura)
                 }
-                // Mostrar todos (incluyendo Reparado y No reparado)
+                // Mostrar todos
                 return true
               }).map((servicio) => (
                 <div 
                   key={servicio.id}
-                  className="p-4 rounded-xl border-2 border-gray-200 hover:border-[#008606] bg-white cursor-pointer transition-all"
+                  className="p-4 lg:p-5 rounded-xl border-2 border-gray-200 hover:border-[#008606] bg-white cursor-pointer transition-all hover:shadow-lg lg:hover:scale-[1.02] duration-200"
                   onClick={() => openServicioDetail(servicio)}
                 >
                   {/* Nombre y estado en la misma línea */}
                   <div className="flex items-start justify-between gap-2 mb-3">
-                    <h3 className="font-semibold text-gray-900 flex-1">
+                    <h3 className="font-semibold text-gray-900 flex-1 text-base lg:text-lg">
                       {(Array.isArray(servicio.fields.Cliente) ? servicio.fields.Cliente[0] : servicio.fields.Cliente) || 'Cliente sin nombre'}
                     </h3>
                     <Badge className={getEstadoBadgeColor(servicio.fields.Estado)}>
@@ -339,22 +355,26 @@ export default function TecnicoPage() {
                   
                   {/* Dirección */}
                   {servicio.fields['Dirección'] && (
-                    <div className="flex items-start gap-2 text-sm text-gray-600 mb-2">
-                      <MapPin className="w-4 h-4 mt-0.5 text-[#008606] flex-shrink-0" />
+                    <div className="flex items-start gap-2 text-sm lg:text-base text-gray-600 mb-2">
+                      <MapPin className="w-4 h-4 lg:w-5 lg:h-5 mt-0.5 text-[#008606] flex-shrink-0" />
                       <p className="truncate">{servicio.fields['Dirección']}</p>
                     </div>
                   )}
                   
                   {/* Población */}
-                  {servicio.fields['Población'] && (
-                    <div className="text-sm text-gray-600 mb-2 ml-6">
-                      <p className="truncate">{servicio.fields['Población']}</p>
+                  {(servicio.fields['Población'] || servicio.fields['Población del cliente']) && (
+                    <div className="text-sm lg:text-base text-gray-600 mb-2 ml-6 lg:ml-7">
+                      <p className="truncate">
+                        {Array.isArray(servicio.fields['Población del cliente']) 
+                          ? servicio.fields['Población del cliente'][0] 
+                          : servicio.fields['Población del cliente'] || servicio.fields['Población']}
+                      </p>
                     </div>
                   )}
                   
                   {servicio.fields['Tipo de Servicio'] && (
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
-                      <Wrench className="w-4 h-4 text-[#008606]" />
+                    <div className="flex items-center gap-2 text-sm lg:text-base text-gray-600">
+                      <Wrench className="w-4 h-4 lg:w-5 lg:h-5 text-[#008606]" />
                       <p className="truncate">{servicio.fields['Tipo de Servicio']}</p>
                     </div>
                   )}

@@ -70,6 +70,8 @@ export async function GET(request: NextRequest) {
 
     console.log('Filtro de búsqueda:', filterFormula)
 
+    // Incluir campos expandidos para obtener la población del cliente y factura
+    const fieldsParam = encodeURIComponent('fields[]=Cliente&fields[]=Población del cliente&fields[]=Estado&fields[]=Tipo de Servicio&fields[]=Dirección&fields[]=Teléfono&fields[]=Email&fields[]=Fecha de Servicio&fields[]=Descripción&fields[]=Notas Técnico&fields[]=Enlace Cita&fields[]=Cita técnico&fields[]=ID Cliente&fields[]=Reparaciones&fields[]=Teléfono técnico&fields[]=Factura')
     const reparacionesUrl = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${encodeURIComponent(AIRTABLE_TABLE_REPARACIONES)}?filterByFormula=${encodeURIComponent(filterFormula)}`
     console.log('Buscando reparaciones en:', AIRTABLE_TABLE_REPARACIONES)
     
