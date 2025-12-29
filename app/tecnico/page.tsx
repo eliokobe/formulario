@@ -305,15 +305,12 @@ export default function TecnicoPage() {
               </div>
             ) : servicios.filter(s => {
               const estado = s.fields.Estado?.toLowerCase()
-              // Para campos tipo file en Airtable: es un array vacío si no tiene archivos
-              const tieneFactura = Array.isArray(s.fields.Factura) && s.fields.Factura.length > 0
               
               if (ocultarFinalizados) {
-                // Mostrar: Asignado, Aceptado, Citado y finalizados SIN factura
+                // Mostrar solo: Asignado, Aceptado, Citado (ocultar Reparado y No reparado)
                 return estado === 'asignado' || 
                        estado === 'aceptado' || 
-                       estado === 'citado' ||
-                       ((estado === 'reparado' || estado === 'no reparado') && !tieneFactura)
+                       estado === 'citado'
               }
               // Mostrar todos
               return true
@@ -325,15 +322,12 @@ export default function TecnicoPage() {
             ) : (
               servicios.filter(s => {
                 const estado = s.fields.Estado?.toLowerCase()
-                // Para campos tipo file en Airtable: es un array vacío si no tiene archivos
-                const tieneFactura = Array.isArray(s.fields.Factura) && s.fields.Factura.length > 0
                 
                 if (ocultarFinalizados) {
-                  // Mostrar: Asignado, Aceptado, Citado y finalizados SIN factura
+                  // Mostrar solo: Asignado, Aceptado, Citado (ocultar Reparado y No reparado)
                   return estado === 'asignado' || 
                          estado === 'aceptado' || 
-                         estado === 'citado' ||
-                         ((estado === 'reparado' || estado === 'no reparado') && !tieneFactura)
+                         estado === 'citado'
                 }
                 // Mostrar todos
                 return true
