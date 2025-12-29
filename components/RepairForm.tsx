@@ -252,7 +252,7 @@ export function RepairForm({
 
       const isRepaired = formData.resultado === 'Reparado';
       const repairData: Record<string, any> = {
-        Resultado: formData.resultado,
+        Estado: formData.resultado,
         Reparación: isRepaired ? formData.reparacion : undefined,
         "Material": isRepaired && (formData.reparacion === 'Reparar el cuadro eléctrico' || formData.reparacion === 'Sustituir el punto de recarga')
           ? formData.material || undefined

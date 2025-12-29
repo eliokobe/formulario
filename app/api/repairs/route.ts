@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     console.log('📥 Request body:', JSON.stringify(body, null, 2));
     
-    const resultado = typeof body.Resultado === 'string' ? body.Resultado.trim() : '';
+    const resultado = typeof body.Estado === 'string' ? body.Estado.trim() : '';
     const reparacion = typeof body.Reparación === 'string' ? body.Reparación.trim() : '';
     const material = typeof body.Material === 'string' ? body.Material.trim() : '';
     const detalles = typeof body.Detalles === 'string' ? body.Detalles.trim() : '';
@@ -25,14 +25,14 @@ export async function POST(request: NextRequest) {
     // Validation - only require essential fields
     if (!resultado) {
       return NextResponse.json(
-        { error: 'El campo Resultado es obligatorio' },
+        { error: 'El campo Estado es obligatorio' },
         { status: 400 }
       );
     }
 
     if (!['Reparado', 'No reparado'].includes(resultado)) {
       return NextResponse.json(
-        { error: 'Valor de Resultado no válido' },
+        { error: 'Valor de Estado no válido' },
         { status: 400 }
       );
     }
@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    body.Resultado = resultado;
+    body.Estado = resultado;
     // Only set select fields if they have values, otherwise don't include them
     body.Reparación = reparacion || undefined;
     body.Material = material || undefined;
@@ -136,7 +136,7 @@ export async function GET(request: NextRequest) {
       direccion: fields['Dirección'] || '',
       Dirección: fields['Dirección'] || '',
       Teléfono: fields['Teléfono'] || '',
-      resultado: fields['Resultado'] || '',
+      resultado: fields['Estado'] || '',
       reparacion: fields['Reparación'] || '',
       material: fields['Material'] || fields['Cuadro eléctrico'] || '', // Usar Material, con fallback a Cuadro eléctrico para compatibilidad
       cuadroElectrico: fields['Cuadro eléctrico'] || '', // Mantener para compatibilidad
@@ -190,7 +190,7 @@ export async function PUT(request: NextRequest) {
     const selectFields = ['Reparación', 'Material', 'Estado'];
     
     const textFields: Array<[string, string]> = [
-      ['Resultado', 'Resultado'],
+      ['Estado', 'Estado'],
       ['Reparación', 'Reparación'],
       ['Material', 'Material'],
       ['Detalles', 'Detalles'],

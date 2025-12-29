@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
 
     // Prepare data to update in Airtable
     const updateData: any = {
-      Resultado: problemaSolucionado,
+      Estado: problemaSolucionado,
       Reparación: accionRealizada,
       Problema: problemaDescripcion,
       Detalles: detallesTrabajo,
