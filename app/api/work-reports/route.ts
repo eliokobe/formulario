@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 export const dynamic = 'force-dynamic';
-import { updateRecord } from '@/lib/airtable';
+import { updateRecord, getRepairById, updateServicioRecord } from '@/lib/airtable';
 
 export async function POST(request: NextRequest) {
   try {
@@ -56,6 +56,40 @@ export async function POST(request: NextRequest) {
     // If we have a repairId, update existing record
     if (repairId) {
       const result = await updateRecord('Reparaciones', repairId, updateData);
+      
+      // Si el estado es "Reparado", actualizar también la tabla Servicios
+      if (problemaSolucionado === 'Reparado') {
+        try {
+          console.log('🔄 Estado Reparado detectado, actualizando tabla Servicios...');
+          
+          // Obtener el registro de Reparaciones para conseguir el ID de Servicios
+          const repairRecord = await getRepairById(repairId);
+          console.log('📋 Registro de Reparaciones:', JSON.stringify(repairRecord, null, 2));
+          
+          // El campo Servicios contiene el array con el record ID de Servicios
+          const serviciosIds = repairRecord?.fields?.['Servicios'];
+          
+          if (serviciosIds && Array.isArray(serviciosIds) && serviciosIds.length > 0) {
+            const servicioRecordId = serviciosIds[0]; // Tomar el primer ID
+            console.log('🎯 ID de Servicios encontrado:', servicioRecordId);
+            
+            // Actualizar el registro en la tabla Servicios
+            await updateServicioRecord(servicioRecordId, {
+              'Estado': 'Finalizado',
+              'Resolución visita': 'Presencial'
+            });
+            
+            console.log('✅ Tabla Servicios actualizada exitosamente');
+          } else {
+            console.warn('⚠️ No se encontró el ID de Servicios en el registro de Reparaciones');
+          }
+        } catch (servicioError: any) {
+          console.error('❌ Error al actualizar la tabla Servicios:', servicioError);
+          // No lanzar el error para no bloquear la respuesta principal
+          // El parte de trabajo se guardó correctamente
+        }
+      }
+      
       return NextResponse.json({ id: result.id, updated: true }, { status: 200 });
     } else {
       // Create new work report record (this would be a different table or approach)

@@ -5,7 +5,8 @@ import {
   findRepairByExpediente,
   getRepairById, 
   updateRepairRecord, 
-  uploadImageToAirtable 
+  uploadImageToAirtable,
+  updateServicioRecord
 } from '@/lib/airtable';
 
 export async function POST(request: NextRequest) {
@@ -250,6 +251,47 @@ export async function PUT(request: NextRequest) {
 
     if (Object.keys(fieldsToUpdate).length > 0) {
       await updateRepairRecord(targetRecordId, fieldsToUpdate);
+    }
+
+    // Actualizar la tabla Servicios según el estado
+    if (fieldsToUpdate['Estado'] === 'Reparado' || fieldsToUpdate['Estado'] === 'No reparado') {
+      try {
+        const estadoTexto = fieldsToUpdate['Estado'] === 'Reparado' ? 'Reparado' : 'No reparado';
+        console.log(`🔄 Estado ${estadoTexto} detectado, actualizando tabla Servicios...`);
+        
+        // Obtener el registro de Reparaciones para conseguir el ID de Servicios
+        const repairRecord = await getRepairById(targetRecordId);
+        console.log('📋 Registro de Reparaciones:', JSON.stringify(repairRecord, null, 2));
+        
+        // El campo Servicios contiene el array con el record ID de Servicios
+        const serviciosIds = repairRecord?.fields?.['Servicios'];
+        
+        if (serviciosIds && Array.isArray(serviciosIds) && serviciosIds.length > 0) {
+          const servicioRecordId = serviciosIds[0]; // Tomar el primer ID
+          console.log('🎯 ID de Servicios encontrado:', servicioRecordId);
+          
+          // Preparar datos de actualización según el estado
+          const servicioUpdateData: Record<string, string> = {};
+          
+          if (fieldsToUpdate['Estado'] === 'Reparado') {
+            servicioUpdateData['Estado'] = 'Finalizado';
+            servicioUpdateData['Resolución visita'] = 'Presencial';
+          } else if (fieldsToUpdate['Estado'] === 'No reparado') {
+            servicioUpdateData['Estado'] = 'Pendiente revisión';
+          }
+          
+          // Actualizar el registro en la tabla Servicios
+          await updateServicioRecord(servicioRecordId, servicioUpdateData);
+          
+          console.log('✅ Tabla Servicios actualizada exitosamente con:', servicioUpdateData);
+        } else {
+          console.warn('⚠️ No se encontró el ID de Servicios en el registro de Reparaciones');
+        }
+      } catch (servicioError: any) {
+        console.error('❌ Error al actualizar la tabla Servicios:', servicioError);
+        // No lanzar el error para no bloquear la respuesta principal
+        // La reparación se guardó correctamente
+      }
     }
 
     const attachmentFields: Array<[string, string]> = [
