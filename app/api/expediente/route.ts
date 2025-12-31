@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { findFormularioByExpediente, getFormularioById, updateFormulario, uploadImageToAirtable } from '@/lib/airtable';
+import { findFormularioByExpediente, getFormularioById, updateFormulario, uploadImageToAirtable, updateServicioRecord } from '@/lib/airtable';
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -177,6 +177,37 @@ export async function PUT(request: NextRequest) {
     if (body['Foto roto'] && Array.isArray(body['Foto roto']) && body['Foto roto'].length > 0) {
       console.log('🔴 Uploading Foto roto...');
       await uploadImageToAirtable(targetRecordId, 'Foto roto', body['Foto roto'][0]);
+    }
+
+    // Sincronizar Estado y Cita en la tabla Servicios usando la relación en Formularios
+    try {
+      const formularioRecord = await getFormularioById(targetRecordId);
+      const servicioLinkPlural = formularioRecord?.fields?.['Servicios'];
+      const servicioLinkSingular = formularioRecord?.fields?.['Servicio'];
+
+      const servicioId = Array.isArray(servicioLinkPlural) && servicioLinkPlural.length > 0
+        ? servicioLinkPlural[0]
+        : Array.isArray(servicioLinkSingular) && servicioLinkSingular.length > 0
+          ? servicioLinkSingular[0]
+          : undefined;
+
+      if (servicioId) {
+        const fieldsToSync: Record<string, any> = { Estado: 'Citado' };
+        if (body['Cita']) {
+          fieldsToSync.Cita = body['Cita'];
+        }
+
+        await updateServicioRecord(servicioId, fieldsToSync);
+        console.log(`✅ Sincronización en Servicios (${servicioId}) completada`, Object.keys(fieldsToSync));
+      } else {
+        console.log('ℹ️ No se encontró un Servicio(s) vinculado para sincronizar la Cita/Estado');
+      }
+    } catch (syncError: any) {
+      console.error('❌ Error al sincronizar datos en Servicios:', syncError);
+      return NextResponse.json({
+        error: 'Registro actualizado, pero no se pudo sincronizar Servicios',
+        details: syncError.message,
+      }, { status: 500 });
     }
     console.log('✅ Record updated successfully');
 

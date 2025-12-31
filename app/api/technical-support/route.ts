@@ -42,33 +42,36 @@ export async function POST(request: NextRequest) {
 
     const result = await createFormulario(formularioData);
 
-    // Si el formulario está vinculado a un Servicio(s), actualizar también su campo "Cita" en la tabla Servicios
-    if (body.Cita) {
-      try {
-        const createdRecord = await getFormularioById(result.id);
-        const servicioLinkPlural = createdRecord?.fields?.['Servicios'];
-        const servicioLinkSingular = createdRecord?.fields?.['Servicio'];
+    // Si el formulario está vinculado a un Servicio(s), sincronizar Estado y Cita en la tabla Servicios
+    try {
+      const createdRecord = await getFormularioById(result.id);
+      const servicioLinkPlural = createdRecord?.fields?.['Servicios'];
+      const servicioLinkSingular = createdRecord?.fields?.['Servicio'];
 
-        // Los enlaces suelen venir como array de record IDs; priorizar campo plural
-        const servicioId = Array.isArray(servicioLinkPlural) && servicioLinkPlural.length > 0
-          ? servicioLinkPlural[0]
-          : Array.isArray(servicioLinkSingular) && servicioLinkSingular.length > 0
-            ? servicioLinkSingular[0]
-            : undefined;
+      // Los enlaces suelen venir como array de record IDs; priorizar campo plural
+      const servicioId = Array.isArray(servicioLinkPlural) && servicioLinkPlural.length > 0
+        ? servicioLinkPlural[0]
+        : Array.isArray(servicioLinkSingular) && servicioLinkSingular.length > 0
+          ? servicioLinkSingular[0]
+          : undefined;
 
-        if (servicioId) {
-          await updateServicioRecord(servicioId, { Cita: body.Cita });
-          console.log(`✅ Cita sincronizada en Servicios (${servicioId})`);
-        } else {
-          console.log('ℹ️ No se encontró un Servicio(s) vinculado para sincronizar la Cita');
+      if (servicioId) {
+        const fieldsToSync: Record<string, any> = { Estado: 'Citado' };
+        if (body.Cita) {
+          fieldsToSync.Cita = body.Cita;
         }
-      } catch (syncError: any) {
-        console.error('❌ Error al sincronizar Cita en Servicios:', syncError);
-        return NextResponse.json(
-          { error: 'Solicitud creada, pero no se pudo actualizar la Cita en Servicios', details: syncError.message },
-          { status: 500 }
-        );
+
+        await updateServicioRecord(servicioId, fieldsToSync);
+        console.log(`✅ Sincronización en Servicios (${servicioId}) completada`, Object.keys(fieldsToSync));
+      } else {
+        console.log('ℹ️ No se encontró un Servicio(s) vinculado para sincronizar la Cita/Estado');
       }
+    } catch (syncError: any) {
+      console.error('❌ Error al sincronizar datos en Servicios:', syncError);
+      return NextResponse.json(
+        { error: 'Solicitud creada, pero no se pudo actualizar Servicios', details: syncError.message },
+        { status: 500 }
+      );
     }
 
     return NextResponse.json({ 
