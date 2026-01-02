@@ -57,6 +57,11 @@ export async function GET(request: NextRequest) {
     // Buscar reparaciones donde:
     // 1. La columna "Técnicos" (linked record) tiene un registro con el teléfono del técnico
     // 2. El Estado es uno de: "Asignado", "Aceptado", "Citado", "Reparado", "No reparado"
+    // 3. La Fecha creación no tiene más de 30 días de antigüedad
+    const today = new Date()
+    const thirtyDaysAgo = new Date(today.getTime() - (30 * 24 * 60 * 60 * 1000))
+    const thirtyDaysAgoISO = thirtyDaysAgo.toISOString().split('T')[0]
+    
     const filterFormula = `AND(
       FIND("${tecnicoTelefono}", ARRAYJOIN({Teléfono técnico})),
       OR(
@@ -65,7 +70,8 @@ export async function GET(request: NextRequest) {
         {Estado} = "Citado",
         {Estado} = "Reparado",
         {Estado} = "No reparado"
-      )
+      ),
+      IS_AFTER({Fecha creación}, "${thirtyDaysAgoISO}")
     )`
 
     console.log('Filtro de búsqueda:', filterFormula)
