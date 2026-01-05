@@ -173,16 +173,16 @@ export function CitaForm({ onComplete, onError }: CitaFormProps) {
                   <div className="font-semibold text-gray-900 mt-1">{existingData.Cliente}</div>
                 </div>
               )}
-              {existingData.Teléfono && (
-                <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
-                  <span className="text-gray-500 text-sm font-medium">Teléfono</span>
-                  <div className="font-semibold text-gray-900 mt-1">{existingData.Teléfono}</div>
-                </div>
-              )}
               {existingData.Dirección && (
                 <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
                   <span className="text-gray-500 text-sm font-medium">Dirección</span>
                   <div className="font-semibold text-gray-900 mt-1">{existingData.Dirección}</div>
+                </div>
+              )}
+              {existingData.Teléfono && (
+                <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                  <span className="text-gray-500 text-sm font-medium">Teléfono</span>
+                  <div className="font-semibold text-gray-900 mt-1">{existingData.Teléfono}</div>
                 </div>
               )}
             </motion.div>

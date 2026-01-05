@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { generateTimeSlots, generateHourlyTimeSlots, isSlotInPast } from '@/lib/time-utils';
+import { generateTimeSlots, generateHourlyTimeSlots, isSlotInPast, isSlotWithinMinimumBookingTime } from '@/lib/time-utils';
 import { cn } from '@/lib/utils';
 import { isWeekend, isBefore, startOfDay, format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -85,9 +85,10 @@ export function TimeSlots({ selectedDate, selectedTime, onTimeSelect, slotType =
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {timeSlots.map((time) => {
             const isInPast = isSlotInPast(selectedDate, time);
+            const isWithinMinBooking = isSlotWithinMinimumBookingTime(selectedDate, time);
             const isOcupado = horasOcupadas.includes(time);
             const isSelected = selectedTime === time;
-            const isDisabled = isInPast || isOcupado;
+            const isDisabled = isInPast || isWithinMinBooking || isOcupado;
 
             return (
               <button
@@ -100,7 +101,7 @@ export function TimeSlots({ selectedDate, selectedTime, onTimeSelect, slotType =
                   !isSelected && !isDisabled && "border-gray-200 hover:border-gray-300 hover:bg-gray-50 text-gray-900",
                   isDisabled && "border-gray-100 text-gray-300 cursor-not-allowed bg-gray-50"
                 )}
-                title={isOcupado ? 'Horario ocupado' : isInPast ? 'Horario pasado' : ''}
+                title={isOcupado ? 'Horario ocupado' : isWithinMinBooking ? 'Debe reservar con al menos 2 horas de antelación' : isInPast ? 'Horario pasado' : ''}
               >
                 {time}
                 {isOcupado && !isInPast && <span className="ml-1 text-xs">(Ocupado)</span>}

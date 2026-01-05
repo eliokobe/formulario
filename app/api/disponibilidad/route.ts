@@ -25,19 +25,33 @@ export async function GET(request: NextRequest) {
     const citas = await getCitasOcupadasByDate(fechaDate);
     
     // Extraer las horas ocupadas
+    // Airtable devuelve las fechas en UTC, pero la columna está configurada con timezone Europe/Madrid
+    // Necesitamos convertir de UTC a Europe/Madrid
     const horasOcupadas = citas
       .filter(cita => cita.cita)
       .map(cita => {
         const citaDate = new Date(cita.cita);
-        const horas = citaDate.getHours().toString().padStart(2, '0');
-        const minutos = citaDate.getMinutes().toString().padStart(2, '0');
-        return `${horas}:${minutos}`;
+        
+        // Convertir a Europe/Madrid timezone y extraer solo la hora
+        const formatter = new Intl.DateTimeFormat('es-ES', {
+          timeZone: 'Europe/Madrid',
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false
+        });
+        
+        const parts = formatter.formatToParts(citaDate);
+        const hora = parts.find(p => p.type === 'hour')?.value || '00';
+        const minuto = parts.find(p => p.type === 'minute')?.value || '00';
+        
+        return `${hora}:${minuto}`;
       });
 
     return NextResponse.json({ 
       fecha,
       horasOcupadas,
-      totalCitas: citas.length 
+      totalCitas: citas.length,
+      debug: citas.map(c => ({ raw: c.cita, converted: horasOcupadas[citas.indexOf(c)] }))
     });
   } catch (error: any) {
     console.error('Error al consultar disponibilidad:', error);

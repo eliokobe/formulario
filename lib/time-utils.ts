@@ -54,6 +54,14 @@ export function isSlotInPast(date: Date, timeSlot: string): boolean {
   return isBefore(slotDateTime, new Date());
 }
 
+// Verificar si el slot está dentro del período mínimo de reserva (2 horas desde ahora)
+export function isSlotWithinMinimumBookingTime(date: Date, timeSlot: string): boolean {
+  const [hours, minutes] = timeSlot.split(':').map(Number);
+  const slotDateTime = setMinutes(setHours(date, hours), minutes);
+  const minimumBookingTime = addMinutes(new Date(), 120); // 2 horas desde ahora
+  return isBefore(slotDateTime, minimumBookingTime);
+}
+
 export function formatDateForDisplay(date: Date): string {
   const formatted = format(date, 'EEEE, d \'de\' MMMM \'de\' yyyy', { locale: es });
   // Capitalizar la primera letra
