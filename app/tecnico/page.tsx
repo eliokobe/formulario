@@ -21,6 +21,9 @@ interface Servicio {
     'Población'?: string
     'Población del cliente'?: string | string[]
     'Estado'?: string
+    'Motivo'?: string
+    'Fecha estado'?: string
+    'Cita'?: string
     'Fecha de Servicio'?: string
     'Descripción'?: string
     'Notas Técnico'?: string
@@ -130,7 +133,36 @@ export default function TecnicoPage() {
     setTelefono('')
   }
 
-  const getEstadoBadgeColor = (estado?: string) => {
+  const getEstadoBadgeColor = (servicio: Servicio) => {
+    const estado = servicio.fields.Estado?.toLowerCase()
+    const fechaEstado = servicio.fields['Fecha estado']
+    const fechaCita = servicio.fields['Cita']
+    
+    // Excepciones: No aplicar naranja en estos casos
+    if (estado === 'no reparado' || estado === 'finalizado') {
+      return 'bg-[#008606]'
+    }
+    
+    // Si está citado y la fecha de cita no ha llegado, no aplicar naranja
+    if (estado === 'citado' && fechaCita) {
+      const citaDate = new Date(fechaCita)
+      const now = new Date()
+      if (citaDate > now) {
+        return 'bg-[#008606]'
+      }
+    }
+    
+    // Verificar si han pasado 24 horas desde fecha estado
+    if (fechaEstado) {
+      const fechaEstadoDate = new Date(fechaEstado)
+      const now = new Date()
+      const diffHours = (now.getTime() - fechaEstadoDate.getTime()) / (1000 * 60 * 60)
+      
+      if (diffHours >= 24) {
+        return 'bg-orange-500'
+      }
+    }
+    
     return 'bg-[#008606]'
   }
 
@@ -338,14 +370,22 @@ export default function TecnicoPage() {
                   onClick={() => openServicioDetail(servicio)}
                 >
                   {/* Nombre y estado en la misma línea */}
-                  <div className="flex items-start justify-between gap-2 mb-3">
+                  <div className="flex items-start justify-between gap-2 mb-2">
                     <h3 className="font-semibold text-gray-900 flex-1 text-base lg:text-lg">
                       {(Array.isArray(servicio.fields.Cliente) ? servicio.fields.Cliente[0] : servicio.fields.Cliente) || 'Cliente sin nombre'}
                     </h3>
-                    <Badge className={getEstadoBadgeColor(servicio.fields.Estado)}>
+                    <Badge className={getEstadoBadgeColor(servicio)}>
                       {servicio.fields.Estado || 'Sin estado'}
                     </Badge>
                   </div>
+                  
+                  {/* Motivo */}
+                  {servicio.fields['Motivo'] && (
+                    <div className="text-sm lg:text-base text-gray-600 mb-3 pl-0">
+                      <span className="font-medium">Motivo: </span>
+                      <span>{servicio.fields['Motivo']}</span>
+                    </div>
+                  )}
                   
                   {/* Dirección */}
                   {servicio.fields['Dirección'] && (
@@ -521,7 +561,36 @@ function DialogContentInner({
     }
   }
 
-  const getEstadoBadgeColor = (estado?: string) => {
+  const getEstadoBadgeColor = (servicio: Servicio) => {
+    const estado = servicio.fields.Estado?.toLowerCase()
+    const fechaEstado = servicio.fields['Fecha estado']
+    const fechaCita = servicio.fields['Cita']
+    
+    // Excepciones: No aplicar naranja en estos casos
+    if (estado === 'no reparado' || estado === 'finalizado') {
+      return 'bg-[#008606]'
+    }
+    
+    // Si está citado y la fecha de cita no ha llegado, no aplicar naranja
+    if (estado === 'citado' && fechaCita) {
+      const citaDate = new Date(fechaCita)
+      const now = new Date()
+      if (citaDate > now) {
+        return 'bg-[#008606]'
+      }
+    }
+    
+    // Verificar si han pasado 24 horas desde fecha estado
+    if (fechaEstado) {
+      const fechaEstadoDate = new Date(fechaEstado)
+      const now = new Date()
+      const diffHours = (now.getTime() - fechaEstadoDate.getTime()) / (1000 * 60 * 60)
+      
+      if (diffHours >= 24) {
+        return 'bg-orange-500'
+      }
+    }
+    
     return 'bg-[#008606]'
   }
 
@@ -539,7 +608,7 @@ function DialogContentInner({
             <DialogTitle className="text-xl">
               {(Array.isArray(servicio.fields.Cliente) ? servicio.fields.Cliente[0] : servicio.fields.Cliente) || 'Cliente sin nombre'}
             </DialogTitle>
-            <Badge className={getEstadoBadgeColor(servicio.fields.Estado)}>
+            <Badge className={getEstadoBadgeColor(servicio)}>
               {servicio.fields.Estado || 'Sin estado'}
             </Badge>
           </div>
