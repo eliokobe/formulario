@@ -159,7 +159,7 @@ export function TechnicalSupportForm({ onComplete, onError }: TechnicalSupportFo
         setFormData(prev => ({
           ...prev,
           cliente: data.cliente || '',
-          telefono: data.telefono || '',
+          telefono: String(data.telefono || ''),
           direccion: data.direccion || '',
           potenciaContratada: data.potenciaContratada || '',
           fechaInstalacion: convertDateFromAirtable(data.fechaInstalacion || ''),
@@ -200,7 +200,7 @@ export function TechnicalSupportForm({ onComplete, onError }: TechnicalSupportFo
         if (!formData.cliente.trim()) {
           newErrors.cliente = 'El nombre del cliente es requerido';
         }
-        if (!formData.telefono.trim()) {
+        if (!String(formData.telefono).trim()) {
           newErrors.telefono = 'El teléfono es requerido';
         }
         if (!formData.direccion.trim()) {

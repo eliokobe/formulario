@@ -7,6 +7,8 @@ export async function GET(request: NextRequest) {
   const recordId = searchParams.get('record');
   const expediente = searchParams.get('expediente');
 
+  console.log('📥 GET /api/expediente - Parameters:', { id, recordId, expediente });
+
   if (!id && !recordId && !expediente) {
     return NextResponse.json({ error: 'Se requiere id, record o expediente' }, { status: 400 });
   }
@@ -20,12 +22,15 @@ export async function GET(request: NextRequest) {
       if (!targetId) {
         return NextResponse.json({ error: 'ID no válido' }, { status: 400 });
       }
+      console.log('🔍 Fetching record by ID:', targetId);
       record = await getFormularioById(targetId);
+      console.log('✅ Record fetched:', record ? 'Found' : 'Not found');
       if (!record) {
         return NextResponse.json({ error: 'Registro no encontrado' }, { status: 404 });
       }
     } else {
       // Buscar por expediente (mantener compatibilidad)
+      console.log('🔍 Fetching record by expediente:', expediente);
       const records = await findFormularioByExpediente(expediente!);
       if (records.length === 0) {
         return NextResponse.json({ error: 'Expediente no encontrado' }, { status: 404 });
@@ -49,10 +54,16 @@ export async function GET(request: NextRequest) {
       cita: record.fields['Cita'], // Incluir la cita existente
     };
 
+    console.log('✅ Returning data for expediente:', data.expediente);
     return NextResponse.json(data);
-  } catch (error) {
-    console.error('Error al buscar expediente:', error);
-    return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 });
+  } catch (error: any) {
+    console.error('❌ Error al buscar expediente:', error);
+    console.error('❌ Error details:', error.message);
+    console.error('❌ Error stack:', error.stack);
+    return NextResponse.json({ 
+      error: 'Error interno del servidor',
+      details: error.message 
+    }, { status: 500 });
   }
 }
 

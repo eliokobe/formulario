@@ -54,7 +54,7 @@ export default function DiagnosticoPage() {
               transition={{ delay: 0.3 }}
               className="text-2xl font-bold text-gray-900 mb-2"
             >
-              {citaResumen ? `Cita agendada el ${citaResumen}` : 'Cita agendada'}
+              {citaResumen ? `Cita telefónica agendada el ${citaResumen}` : 'Cita telefónica agendada'}
             </motion.h2>
             <motion.p 
               initial={{ opacity: 0, y: 20 }}

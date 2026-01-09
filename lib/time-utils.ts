@@ -1,13 +1,63 @@
 import { format, addMinutes, setHours, setMinutes, isWeekend, isAfter, isBefore, startOfDay } from 'date-fns';
 import { es } from 'date-fns/locale';
 
-// Generar franjas de 1 hora de 8:00 a 21:00 para formulario de cita
-export function generateHourlyTimeSlots(date: Date): string[] {
+// Calcular días laborables entre dos fechas (excluyendo fines de semana)
+function countBusinessDays(startDate: Date, endDate: Date): number {
+  let count = 0;
+  const current = new Date(startDate);
+  
+  while (current <= endDate) {
+    if (!isWeekend(current)) {
+      count++;
+    }
+    current.setDate(current.getDate() + 1);
+  }
+  
+  return count;
+}
+
+// Verificar si una fecha está dentro del rango permitido (máximo 2 días laborables)
+function isWithinBusinessDaysLimit(date: Date, maxBusinessDays: number = 2): boolean {
+  const today = startOfDay(new Date());
+  const targetDate = startOfDay(date);
+  
+  // Si es hoy, está permitido
+  if (targetDate.getTime() === today.getTime()) {
+    return true;
+  }
+  
+  // Contar días laborables desde mañana hasta la fecha objetivo
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  
+  const businessDaysAhead = countBusinessDays(tomorrow, targetDate);
+  return businessDaysAhead <= maxBusinessDays;
+}
+
+// Verificar si una fecha está dentro de un número de días calendario (para técnicos)
+function isWithinCalendarDaysLimit(date: Date, maxDays: number = 14): boolean {
+  const today = startOfDay(new Date());
+  const targetDate = startOfDay(date);
+  const maxDate = new Date(today);
+  maxDate.setDate(maxDate.getDate() + maxDays);
+  
+  return !isAfter(targetDate, maxDate);
+}
+
+// Generar franjas de 1 hora de 8:00 a 21:00 para formulario de cita (técnicos)
+export function generateHourlyTimeSlots(date: Date, isTechnician: boolean = true): string[] {
   const today = startOfDay(new Date());
   
-  // Skip weekends and past dates
-  if (isWeekend(date) || isBefore(startOfDay(date), today)) {
-    return [];
+  if (isTechnician) {
+    // Técnicos: pueden agendar en fines de semana y hasta 2 semanas adelante
+    if (isBefore(startOfDay(date), today) || !isWithinCalendarDaysLimit(date, 14)) {
+      return [];
+    }
+  } else {
+    // Clientes: no pueden agendar en fines de semana y máximo 2 días laborables
+    if (isWeekend(date) || isBefore(startOfDay(date), today) || !isWithinBusinessDaysLimit(date)) {
+      return [];
+    }
   }
 
   const slots: string[] = [];
@@ -24,8 +74,8 @@ export function generateHourlyTimeSlots(date: Date): string[] {
 export function generateTimeSlots(date: Date): string[] {
   const today = startOfDay(new Date());
   
-  // Skip weekends and past dates
-  if (isWeekend(date) || isBefore(startOfDay(date), today)) {
+  // Skip weekends, past dates, and dates beyond 2 business days
+  if (isWeekend(date) || isBefore(startOfDay(date), today) || !isWithinBusinessDaysLimit(date)) {
     return [];
   }
 

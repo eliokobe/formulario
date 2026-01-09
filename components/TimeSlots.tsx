@@ -17,7 +17,8 @@ interface TimeSlotsProps {
 export function TimeSlots({ selectedDate, selectedTime, onTimeSelect, slotType = 'quarter', checkAvailability = true }: TimeSlotsProps) {
   const [horasOcupadas, setHorasOcupadas] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const timeSlots = slotType === 'hourly' ? generateHourlyTimeSlots(selectedDate) : generateTimeSlots(selectedDate);
+  const isTechnician = slotType === 'hourly'; // hourly es para técnicos
+  const timeSlots = slotType === 'hourly' ? generateHourlyTimeSlots(selectedDate, isTechnician) : generateTimeSlots(selectedDate);
 
   // Cargar horas ocupadas cuando cambia la fecha (solo si checkAvailability es true)
   useEffect(() => {
@@ -52,16 +53,21 @@ export function TimeSlots({ selectedDate, selectedTime, onTimeSelect, slotType =
 
   const getUnavailableMessage = () => {
     const today = startOfDay(new Date());
+    const isTechnician = slotType === 'hourly';
     
     if (isBefore(startOfDay(selectedDate), today)) {
       return `No es posible reservar para el ${format(selectedDate, 'd')} de ${format(selectedDate, 'MMMM', { locale: es })} porque ya ha pasado`;
     }
     
-    if (isWeekend(selectedDate)) {
+    if (!isTechnician && isWeekend(selectedDate)) {
       return 'No hay horarios disponibles los fines de semana';
     }
     
-    return 'No hay horarios disponibles para esta fecha';
+    if (isTechnician) {
+      return 'No hay horarios disponibles para esta fecha. Solo puede reservar con máximo 2 semanas de anticipación';
+    }
+    
+    return 'No hay horarios disponibles para esta fecha. Solo puede reservar con máximo 2 días laborables de anticipación';
   };
 
   if (timeSlots.length === 0) {
