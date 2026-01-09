@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { updateServicioRecord, getRepairById, getServicioById } from '@/lib/airtable'
 
 const AIRTABLE_TOKEN = process.env.AIRTABLE_TOKEN
 const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID
@@ -196,6 +197,58 @@ export async function PATCH(request: NextRequest) {
     }
 
     const updatedReparacion = await response.json()
+
+    // Si el estado es "Rechazado", actualizar la tabla Servicios a "Pendiente de asignar"
+    if (estado === 'Rechazado') {
+      try {
+        console.log('🔄 Estado Rechazado detectado, actualizando tabla Servicios...')
+        
+        // Obtener el registro de Reparaciones para conseguir el ID de Servicios
+        const repairRecord = await getRepairById(servicioId)
+        console.log('📋 Registro de Reparaciones:', JSON.stringify(repairRecord, null, 2))
+        
+        // El campo Servicios contiene el array con el record ID de Servicios
+        const serviciosIds = repairRecord?.fields?.['Servicios']
+        
+        if (serviciosIds && Array.isArray(serviciosIds) && serviciosIds.length > 0) {
+          const servicioRecordId = serviciosIds[0] // Tomar el primer ID
+          console.log('🎯 ID de Servicios encontrado:', servicioRecordId)
+          
+          // Obtener el registro actual de Servicios para obtener el técnico asignado
+          const servicioRecord = await getServicioById(servicioRecordId)
+          console.log('📋 Registro de Servicios actual:', JSON.stringify(servicioRecord, null, 2))
+          
+          const tecnicoActual = servicioRecord?.fields?.['Técnico'] // Array de IDs de técnicos
+          const tecnicosIntentados = servicioRecord?.fields?.['Técnicos intentados'] || [] // Array existente
+          
+          // Preparar la actualización
+          const updateData: Record<string, any> = {
+            'Estado': 'Pendiente de asignar',
+            'Técnico': [] // Limpiar el técnico actual
+          }
+          
+          // Si hay un técnico asignado, moverlo a Técnicos intentados
+          if (tecnicoActual && Array.isArray(tecnicoActual) && tecnicoActual.length > 0) {
+            // Agregar el técnico actual a la lista de técnicos intentados (evitando duplicados)
+            const tecnicosSet = new Set([...tecnicosIntentados, ...tecnicoActual])
+            const nuevosTecnicosIntentados = Array.from(tecnicosSet)
+            updateData['Técnicos intentados'] = nuevosTecnicosIntentados
+            console.log('👤 Moviendo técnico de "Técnico" a "Técnicos intentados":', tecnicoActual)
+          }
+          
+          // Actualizar el registro en la tabla Servicios
+          await updateServicioRecord(servicioRecordId, updateData)
+          
+          console.log('✅ Tabla Servicios actualizada exitosamente:', updateData)
+        } else {
+          console.warn('⚠️ No se encontró el ID de Servicios en el registro de Reparaciones')
+        }
+      } catch (servicioError: any) {
+        console.error('❌ Error al actualizar la tabla Servicios:', servicioError)
+        // No lanzar el error para no bloquear la respuesta principal
+        // La reparación se guardó correctamente con estado Rechazado
+      }
+    }
 
     return NextResponse.json({
       success: true,
