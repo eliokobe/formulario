@@ -10,6 +10,7 @@ const AIRTABLE_TABLE_FORMULARIO = process.env.AIRTABLE_TABLE_FORMULARIO;
 const AIRTABLE_TABLE_BOOKINGS = process.env.AIRTABLE_TABLE_NAME;
 const AIRTABLE_TABLE_CLIENTES = process.env.AIRTABLE_TABLE_CLIENTES;
 const AIRTABLE_TABLE_SERVICIOS = process.env.AIRTABLE_TABLE_SERVICIOS;
+const AIRTABLE_TABLE_ENVIOS = process.env.AIRTABLE_TABLE_ENVIOS || 'Envíos';
 
 // Nueva base de Airtable para servicios generales
 const AIRTABLE_SERVICIOS_BASE_ID = 'appcRKAwnzR4sdGPL';
@@ -235,6 +236,10 @@ export async function updateRepairRecord(recordId: string, data: any): Promise<{
 }
 
 // Specific functions for Formulario table
+export async function createEnvio(envioData: any): Promise<{ id: string }> {
+  return createRecord(AIRTABLE_TABLE_ENVIOS, envioData);
+}
+
 export async function findFormularioByExpediente(expediente: string): Promise<any[]> {
   return listRecords(AIRTABLE_TABLE_FORMULARIO!, {
     filterByFormula: `{Expediente} = '${expediente}'`,

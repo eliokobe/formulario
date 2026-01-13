@@ -6,7 +6,9 @@ import {
   getRepairById, 
   updateRepairRecord, 
   uploadImageToAirtable,
-  updateServicioRecord
+  updateServicioRecord,
+  getServicioById,
+  createEnvio
 } from '@/lib/airtable';
 
 export async function POST(request: NextRequest) {
@@ -84,6 +86,9 @@ export async function POST(request: NextRequest) {
 
     // Create the repair record
     const result = await createRepair(body);
+    
+    // Check and create Envío if needed
+    await checkAndCreateEnvio(result.id, resultado, reparacion);
 
     return NextResponse.json({ id: result.id }, { status: 201 });
   } catch (error: any) {
@@ -252,6 +257,11 @@ export async function PUT(request: NextRequest) {
     if (Object.keys(fieldsToUpdate).length > 0) {
       await updateRepairRecord(targetRecordId, fieldsToUpdate);
     }
+    
+    // Check and create Envío if needed
+    if (fieldsToUpdate['Estado'] && fieldsToUpdate['Reparación']) {
+      await checkAndCreateEnvio(targetRecordId, fieldsToUpdate['Estado'], fieldsToUpdate['Reparación']);
+    }
 
     // Actualizar la tabla Servicios según el estado
     if (fieldsToUpdate['Estado'] === 'Reparado' || fieldsToUpdate['Estado'] === 'No reparado') {
@@ -317,5 +327,40 @@ export async function PUT(request: NextRequest) {
     console.error('Update repair error:', error);
     const message = typeof error?.message === 'string' ? error.message : 'Error al actualizar la reparación';
     return NextResponse.json({ error: message }, { status: 500 });
+  }
+}
+
+async function checkAndCreateEnvio(recordId: string, estado: string, reparacion: string) {
+  if (estado === 'Reparado' && reparacion === 'Sustituir el punto de recarga') {
+    console.log('📦 Creating Envio record...');
+    try {
+      const repairRecord = await getRepairById(recordId);
+      const serviciosIds = repairRecord?.fields?.['Servicios'];
+      
+      if (serviciosIds && Array.isArray(serviciosIds) && serviciosIds.length > 0) {
+        const servicioId = serviciosIds[0];
+        const servicioRecord = await getServicioById(servicioId);
+        const sFields = servicioRecord.fields || {};
+        
+        const envioData = {
+          'Cliente': repairRecord.fields['Cliente'],
+          'Dirección': repairRecord.fields['Dirección'],
+          'Población': sFields['Población'],
+          'Código postal': sFields['Código postal'],
+          'Provincia': sFields['Provincia postal'],
+          'Teléfono': sFields['Teléfono postal'],
+          'Transporte': 'Inbound Logística',
+          'Estado': 'Pendiente recogida',
+          'Servicio': [servicioId]
+        };
+        
+        await createEnvio(envioData);
+        console.log('✅ Envio created successfully');
+      } else {
+        console.log('⚠️ Could not create Envio: No Servicio linked');
+      }
+    } catch (error) {
+      console.error('❌ Error creating Envio:', error);
+    }
   }
 }
