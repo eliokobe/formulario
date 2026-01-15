@@ -46,6 +46,7 @@ export function RepairForm({
     // Step 1: Datos Generales
     cliente: '',
     direccion: '',
+    telefono: '',
 
     // Step 2: Reparación
     resultado: '',
@@ -92,6 +93,7 @@ export function RepairForm({
           ...prev,
           cliente: data.cliente || '',
           direccion: data.direccion || '',
+          telefono: data.Teléfono || data.telefono || '',
           resultado: data.resultado || '',
           reparacion: isRepaired ? data.reparacion || '' : '',
           material: isRepaired ? (data.material || data.cuadroElectrico || '') : '',
@@ -130,6 +132,7 @@ export function RepairForm({
           ...prev,
           cliente: data.cliente || '',
           direccion: data.direccion || '',
+          telefono: data.Teléfono || data.telefono || '',
           resultado: data.resultado || '',
           reparacion: isRepaired ? data.reparacion || '' : '',
           material: isRepaired ? (data.material || data.cuadroElectrico || '') : '',
@@ -472,6 +475,22 @@ export function RepairForm({
                 {errors.direccion && (
                   <p className="text-red-600 text-sm mt-1">{errors.direccion}</p>
                 )}
+              </div>
+
+              <div>
+                <label htmlFor="telefono" className="block text-sm font-medium text-gray-700 mb-2">
+                  Teléfono
+                </label>
+                <div className="relative">
+                  <input
+                    type="tel"
+                    id="telefono"
+                    value={formData.telefono}
+                    readOnly
+                    className="w-full px-4 py-4 text-base rounded-xl border bg-gray-100 border-gray-200 text-gray-700 cursor-not-allowed focus:ring-0 focus:border-gray-200"
+                    placeholder="Se carga automáticamente del cliente"
+                  />
+                </div>
               </div>
             </motion.div>
           )}

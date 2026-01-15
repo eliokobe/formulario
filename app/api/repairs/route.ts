@@ -141,7 +141,8 @@ export async function GET(request: NextRequest) {
       Cliente: fields['Cliente'] || '',
       direccion: fields['Dirección'] || '',
       Dirección: fields['Dirección'] || '',
-      Teléfono: fields['Teléfono'] || '',
+      telefono: Array.isArray(fields['Teléfono']) ? fields['Teléfono'][0] : (fields['Teléfono'] || ''),
+      Teléfono: Array.isArray(fields['Teléfono']) ? fields['Teléfono'][0] : (fields['Teléfono'] || ''),
       resultado: fields['Estado'] || '',
       reparacion: fields['Reparación'] || '',
       material: fields['Material'] || fields['Cuadro eléctrico'] || '', // Usar Material, con fallback a Cuadro eléctrico para compatibilidad

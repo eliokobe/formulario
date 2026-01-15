@@ -6,7 +6,8 @@ import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { ArrowLeft, Calendar, FileText, User, MapPin, Phone, Mail, Clock, CheckCircle, Wrench, LogOut, Filter } from 'lucide-react'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { ArrowLeft, Calendar, FileText, User, MapPin, Phone, Mail, Clock, CheckCircle, Wrench, LogOut, Filter, Navigation, ClipboardList } from 'lucide-react'
 import { Switch } from '@/components/ui/switch'
 
 interface Servicio {
@@ -20,6 +21,8 @@ interface Servicio {
     'Dirección'?: string
     'Población'?: string
     'Población del cliente'?: string | string[]
+    'Código postal'?: string | string[]
+    'Provincia'?: string | string[]
     'Estado'?: string
     'Motivo'?: string
     'Fecha estado'?: string
@@ -167,22 +170,8 @@ export default function TecnicoPage() {
   }
 
   const openServicioDetail = (servicio: Servicio) => {
-    const estado = servicio.fields.Estado?.toLowerCase()
-    
-    // Si el servicio está aceptado, ir al formulario de cita
-    if (estado === 'aceptado') {
-      window.location.href = `/cita?id=${servicio.id}`
-      return
-    }
-    
-    // Si el servicio está citado, reparado o no reparado, ir al parte de trabajo
-    if (estado === 'citado' || estado === 'reparado' || estado === 'no reparado') {
-      // Como estamos trabajando directamente con reparaciones, el id es el id de la reparación
-      window.location.href = `/parte?id=${servicio.id}`
-      return
-    }
-    
-    // En cualquier otro caso (Asignado), abrir el modal de detalles
+    // Siempre abrir el modal de detalles para todos los estados
+    // El modal mostrará las pestañas y las acciones correspondientes según el estado
     setSelectedServicio(servicio)
   }
 
@@ -294,25 +283,27 @@ export default function TecnicoPage() {
   return (
     <div className="min-h-screen bg-white lg:bg-gray-50 flex items-center justify-center p-4 lg:p-8">
       <div className="max-w-md lg:max-w-6xl w-full space-y-6">
-        <div className="text-center lg:mb-8">
-          <div className="flex justify-between items-start mb-2">
-            <div className="flex-1"></div>
-            <div className="flex-1">
-              <h2 className="text-2xl lg:text-4xl font-bold text-gray-900">
-                {tecnicoData?.fields?.Nombre || 'Técnico'}
-              </h2>
-            </div>
-            <div className="flex-1 flex justify-end">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 lg:p-6 mb-6">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <h1 className="text-xl lg:text-3xl font-bold text-gray-900">
+              Servicios asignados
+            </h1>
+            <div className="flex items-center gap-2 lg:gap-3">
+              <button
+                onClick={() => window.open('https://formacion.ritest.es/reparadores', '_blank', 'noopener,noreferrer')}
+                className="flex-1 lg:flex-none bg-[#008606] hover:bg-[#008606]/90 text-white font-semibold py-2.5 px-4 lg:px-6 rounded-xl transition-all duration-200 text-sm lg:text-base whitespace-nowrap"
+              >
+                Acceder a Formación
+              </button>
               <button
                 onClick={handleLogout}
-                className="text-gray-500 hover:text-red-600 transition-colors p-2 lg:p-3"
+                className="text-gray-500 hover:text-red-600 transition-colors p-2.5 rounded-lg hover:bg-gray-50 flex-shrink-0"
                 title="Cerrar sesión"
               >
                 <LogOut className="w-5 h-5 lg:w-6 lg:h-6" />
               </button>
             </div>
           </div>
-          <p className="text-gray-600 lg:text-lg">Servicios Asignados</p>
         </div>
 
         <div className="space-y-4">
@@ -438,6 +429,54 @@ export default function TecnicoPage() {
       </Dialog>
     </div>
   )
+}
+
+function getCosasARevisar(motivo: string | string[] | undefined): string[] {
+  // Convertir a string si es un array o manejar undefined/null
+  const motivoStr = Array.isArray(motivo) ? motivo[0] : (motivo || '')
+  const motivoLower = typeof motivoStr === 'string' ? motivoStr.toLowerCase() : ''
+  
+  if (motivoLower.includes('instalación')) {
+    return [
+      'Verificar el cuadro eléctrico y protecciones',
+      'Comprobar la toma de tierra',
+      'Verificar el cableado y conexiones',
+      'Comprobar la instalación del punto de recarga',
+      'Verificar la configuración del equipo',
+      'Realizar pruebas de carga'
+    ]
+  }
+  
+  if (motivoLower.includes('reparación') || motivoLower.includes('avería')) {
+    return [
+      'Verificar el estado del cuadro eléctrico',
+      'Comprobar las protecciones (magnetotérmico, diferencial)',
+      'Revisar el cableado y conexiones',
+      'Comprobar el punto de recarga',
+      'Verificar errores en el equipo',
+      'Realizar pruebas de funcionamiento'
+    ]
+  }
+  
+  if (motivoLower.includes('mantenimiento')) {
+    return [
+      'Inspección visual del equipo',
+      'Verificar protecciones eléctricas',
+      'Revisar conexiones y cableado',
+      'Comprobar funcionamiento del punto de recarga',
+      'Limpiar y verificar conectores',
+      'Realizar pruebas de carga'
+    ]
+  }
+  
+  // Default para cualquier otro motivo
+  return [
+    'Inspección visual del equipo',
+    'Verificar el cuadro eléctrico',
+    'Comprobar las conexiones',
+    'Revisar el funcionamiento',
+    'Documentar hallazgos'
+  ]
 }
 
 function DialogContentInner({ 
@@ -615,7 +654,17 @@ function DialogContentInner({
         </div>
       </DialogHeader>
 
-      <div className="space-y-4">{servicio.fields.Estado?.toLowerCase() === 'asignado' ? (
+      <Tabs defaultValue={"accion"} className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value={"accion"}>Acción</TabsTrigger>
+          <TabsTrigger value={"ubicacion"}>
+            <Navigation className="w-4 h-4 mr-1" />
+            Ubicación
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value={"accion"} className="space-y-4 mt-4">
+          {servicio.fields.Estado?.toLowerCase() === 'asignado' ? (
           <>
             <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
               <h4 className="text-base font-semibold text-gray-900 mb-3">
@@ -629,16 +678,6 @@ function DialogContentInner({
                     <p className="text-xs text-gray-600">Cliente</p>
                     <p className="text-sm font-medium text-gray-900">
                       {(Array.isArray(servicio.fields.Cliente) ? servicio.fields.Cliente[0] : servicio.fields.Cliente) || 'No especificado'}
-                    </p>
-                  </div>
-                </div>
-                
-                <div className="flex items-start gap-2">
-                  <MapPin className="w-4 h-4 text-[#008606] mt-0.5" />
-                  <div>
-                    <p className="text-xs text-gray-600">Dirección</p>
-                    <p className="text-sm font-medium text-gray-900">
-                      {servicio.fields['Dirección'] || 'No especificada'}
                     </p>
                   </div>
                 </div>
@@ -682,16 +721,6 @@ function DialogContentInner({
             
             <div className="space-y-3">
               <div className="flex items-start gap-2">
-                <MapPin className="w-4 h-4 text-[#008606] mt-0.5" />
-                <div>
-                  <p className="text-xs text-gray-600">Dirección</p>
-                  <p className="text-sm font-medium text-gray-900">
-                    {servicio.fields['Dirección'] || 'No especificada'}
-                  </p>
-                </div>
-              </div>
-              
-              <div className="flex items-start gap-2">
                 <Phone className="w-4 h-4 text-[#008606] mt-0.5" />
                 <div>
                   <p className="text-xs text-gray-600">Teléfono</p>
@@ -702,22 +731,36 @@ function DialogContentInner({
               </div>
               
               <div className="flex items-start gap-2">
-                <Mail className="w-4 h-4 text-[#008606] mt-0.5" />
+                <Calendar className="w-4 h-4 text-[#008606] mt-0.5" />
                 <div>
-                  <p className="text-xs text-gray-600">Email</p>
+                  <p className="text-xs text-gray-600">Cita</p>
                   <p className="text-sm font-medium text-gray-900">
-                    {servicio.fields['Email'] || 'No especificado'}
+                    {servicio.fields['Cita técnico'] || servicio.fields['Cita']
+                      ? new Date((servicio.fields['Cita técnico'] || servicio.fields['Cita']) as string).toLocaleString('es-ES', {
+                          day: '2-digit',
+                          month: '2-digit',
+                          year: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })
+                      : 'No especificada'}
                   </p>
                 </div>
               </div>
               
               <div className="flex items-start gap-2">
-                <Calendar className="w-4 h-4 text-[#008606] mt-0.5" />
+                <Clock className="w-4 h-4 text-[#008606] mt-0.5" />
                 <div>
-                  <p className="text-xs text-gray-600">Fecha de Servicio</p>
+                  <p className="text-xs text-gray-600">Último cambio</p>
                   <p className="text-sm font-medium text-gray-900">
-                    {servicio.fields['Fecha de Servicio']
-                      ? new Date(servicio.fields['Fecha de Servicio'] as string).toLocaleDateString('es-ES')
+                    {servicio.fields['Fecha estado']
+                      ? new Date(servicio.fields['Fecha estado'] as string).toLocaleString('es-ES', {
+                          day: '2-digit',
+                          month: '2-digit',
+                          year: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })
                       : 'No especificada'}
                   </p>
                 </div>
@@ -781,30 +824,125 @@ function DialogContentInner({
               </button>
             )}
           </div>
-        ) : servicio.fields.Estado?.toLowerCase() === 'citado' && servicio.fields['Cita técnico'] ? (
-          <div className="border-2 border-green-600 rounded-lg p-4">
-            <h4 className="text-base font-semibold text-gray-900 mb-2">Parte de Trabajo</h4>
-            <p className="text-sm text-gray-600 mb-4">
-              La cita ha sido confirmada. Accede al parte de trabajo.
-            </p>
-            <Alert className="border-green-200 bg-green-50 mb-3">
-              <FileText className="h-4 w-4 text-green-600" />
-              <AlertDescription className="text-sm text-green-800">
-                Cita programada: {servicio.fields['Cita técnico']}
-              </AlertDescription>
-            </Alert>
+        ) : servicio.fields.Estado?.toLowerCase() === 'citado' ? (
+          <>
+            {servicio.fields['Cita técnico'] && (
+              <Alert className="border-green-200 bg-green-50 mb-3">
+                <FileText className="h-4 w-4 text-green-600" />
+                <AlertDescription className="text-sm text-green-800">
+                  Cita programada: {servicio.fields['Cita técnico']}
+                </AlertDescription>
+              </Alert>
+            )}
+            <div className="space-y-3">
+              <button
+                onClick={() => {
+                  // Como estamos trabajando directamente con reparaciones, el id es el id de la reparación
+                  window.open(`/parte?id=${servicio.id}`, '_blank')
+                }}
+                className="w-full bg-[#008606] hover:bg-[#008606]/90 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl"
+              >
+                Abrir Parte de Trabajo
+              </button>
+              <button
+                onClick={() => {
+                  window.location.href = `/cita?id=${servicio.id}`
+                }}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl"
+              >
+                Reprogramar Cita
+              </button>
+            </div>
+          </>
+        ) : null}
+        </TabsContent>
+
+        <TabsContent value={"ubicacion"} className="space-y-4 mt-4">
+          <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+            <h4 className="text-base font-semibold text-gray-900 mb-3">
+              Ubicación
+            </h4>
+            
+            <div className="space-y-3">
+              <div className="flex items-start gap-2">
+                <MapPin className="w-5 h-5 text-[#008606] mt-0.5" />
+                <div className="flex-1">
+                  <p className="text-xs text-gray-600 mb-1">Dirección</p>
+                  <p className="text-sm font-medium text-gray-900">
+                    {servicio.fields['Dirección'] || 'No especificada'}
+                  </p>
+                </div>
+              </div>
+
+              {(servicio.fields['Código postal'] || (Array.isArray(servicio.fields['Código postal']) && servicio.fields['Código postal'].length > 0)) && (
+                <div className="flex items-start gap-2">
+                  <div className="w-5 h-5" /> {/* Espaciador para alineación */}
+                  <div className="flex-1">
+                    <p className="text-xs text-gray-600 mb-1">Código Postal</p>
+                    <p className="text-sm font-medium text-gray-900">
+                      {Array.isArray(servicio.fields['Código postal']) 
+                        ? servicio.fields['Código postal'][0] 
+                        : servicio.fields['Código postal']}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {(servicio.fields['Población'] || servicio.fields['Población del cliente']) && (
+                <div className="flex items-start gap-2">
+                  <div className="w-5 h-5" /> {/* Espaciador para alineación */}
+                  <div className="flex-1">
+                    <p className="text-xs text-gray-600 mb-1">Población</p>
+                    <p className="text-sm font-medium text-gray-900">
+                      {Array.isArray(servicio.fields['Población del cliente']) 
+                        ? servicio.fields['Población del cliente'][0] 
+                        : servicio.fields['Población del cliente'] || servicio.fields['Población']}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {(servicio.fields['Provincia'] || (Array.isArray(servicio.fields['Provincia']) && servicio.fields['Provincia'].length > 0)) && (
+                <div className="flex items-start gap-2">
+                  <div className="w-5 h-5" /> {/* Espaciador para alineación */}
+                  <div className="flex-1">
+                    <p className="text-xs text-gray-600 mb-1">Provincia</p>
+                    <p className="text-sm font-medium text-gray-900">
+                      {Array.isArray(servicio.fields['Provincia']) 
+                        ? servicio.fields['Provincia'][0] 
+                        : servicio.fields['Provincia']}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {servicio.fields['Dirección'] && (
             <button
               onClick={() => {
-                // Como estamos trabajando directamente con reparaciones, el id es el id de la reparación
-                window.open(`/parte?id=${servicio.id}`, '_blank')
+                const direccion = servicio.fields['Dirección']
+                const poblacion = Array.isArray(servicio.fields['Población del cliente']) 
+                  ? servicio.fields['Población del cliente'][0] 
+                  : servicio.fields['Población del cliente'] || servicio.fields['Población'] || ''
+                const provincia = Array.isArray(servicio.fields['Provincia']) 
+                  ? servicio.fields['Provincia'][0] 
+                  : servicio.fields['Provincia'] || ''
+                const codigoPostal = Array.isArray(servicio.fields['Código postal']) 
+                  ? servicio.fields['Código postal'][0] 
+                  : servicio.fields['Código postal'] || ''
+                const direccionCompleta = `${direccion}, ${codigoPostal} ${poblacion}, ${provincia}`.trim()
+                const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(direccionCompleta)}`
+                window.open(url, '_blank', 'noopener,noreferrer')
               }}
-              className="w-full bg-[#008606] hover:bg-[#008606]/90 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl"
+              className="w-full bg-[#008606] hover:bg-[#008606]/90 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
             >
-              Abrir Parte de Trabajo
+              <Navigation className="w-5 h-5" />
+              Abrir en Google Maps
             </button>
-          </div>
-        ) : null}
-      </div>
+          )}
+        </TabsContent>
+      </Tabs>
     </>
   )
 }
