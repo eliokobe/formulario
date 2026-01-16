@@ -129,7 +129,12 @@ export async function GET(request: NextRequest) {
 // PATCH - Actualizar estado o notas de una reparación
 export async function PATCH(request: NextRequest) {
   try {
-    const { servicioId, estado, notas, generarEnlaceCita, clienteId } = await request.json()
+    const body = await request.json()
+    const { servicioId, estado, notas, generarEnlaceCita } = body
+    
+    console.log('🔧 PATCH Request Body:', JSON.stringify(body, null, 2))
+    console.log('📋 servicioId:', servicioId)
+    console.log('📋 generarEnlaceCita:', generarEnlaceCita)
 
     if (!servicioId) {
       return NextResponse.json(
@@ -158,12 +163,12 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Si se solicita generar enlace de cita
-    if (generarEnlaceCita && clienteId) {
-      // Generar el enlace de cita (ajusta la URL según tu dominio)
+    if (generarEnlaceCita) {
+      // Generar el enlace de cita usando el ID de la reparación
       const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://formulario.ritest.es'
-      const enlaceCita = `${baseUrl}/cita?id=${clienteId}`
+      const enlaceCita = `${baseUrl}/cita?id=${servicioId}`
       fieldsToUpdate['Enlace Cita'] = enlaceCita
-      fieldsToUpdate['Estado'] = 'Aceptado'
+      console.log('📅 Generando enlace de cita:', enlaceCita)
     }
 
     if (Object.keys(fieldsToUpdate).length === 0) {
@@ -175,6 +180,10 @@ export async function PATCH(request: NextRequest) {
 
     // Actualizar la reparación en Airtable
     const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${encodeURIComponent(AIRTABLE_TABLE_REPARACIONES)}/${servicioId}`
+    
+    console.log('🔄 Actualizando registro en Airtable:')
+    console.log('  URL:', url)
+    console.log('  Campos a actualizar:', JSON.stringify(fieldsToUpdate, null, 2))
     
     const response = await fetch(url, {
       method: 'PATCH',
@@ -189,9 +198,9 @@ export async function PATCH(request: NextRequest) {
 
     if (!response.ok) {
       const errorText = await response.text()
-      console.error('Error updating reparacion:', response.status, errorText)
+      console.error('❌ Error updating reparacion:', response.status, errorText)
       return NextResponse.json(
-        { error: 'Error al actualizar reparación' },
+        { error: 'Error al actualizar reparación', details: errorText },
         { status: response.status }
       )
     }

@@ -7,7 +7,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { ArrowLeft, Calendar, FileText, User, MapPin, Phone, Mail, Clock, CheckCircle, Wrench, LogOut, Filter, Navigation, ClipboardList } from 'lucide-react'
+import { ArrowLeft, Calendar, FileText, User, MapPin, Phone, Mail, Clock, CheckCircle, Wrench, LogOut, Filter, Navigation, ClipboardList, GraduationCap, MessageCircle, Home, HeadphonesIcon } from 'lucide-react'
 import { Switch } from '@/components/ui/switch'
 
 interface Servicio {
@@ -48,6 +48,7 @@ export default function TecnicoPage() {
   const [loadingServicios, setLoadingServicios] = useState(false)
   const [selectedServicio, setSelectedServicio] = useState<Servicio | null>(null)
   const [ocultarFinalizados, setOcultarFinalizados] = useState(true)
+  const [searchTerm, setSearchTerm] = useState('')
   const [showSuccess, setShowSuccess] = useState(false)
   const [successMessage, setSuccessMessage] = useState('')
   const [acceptedServicioId, setAcceptedServicioId] = useState<string | null>(null)
@@ -243,7 +244,14 @@ export default function TecnicoPage() {
               <div className="space-y-3">
                 <button
                   onClick={() => {
-                    window.location.href = `/cita?id=${acceptedServicioId}`
+                    // Buscar el servicio aceptado para obtener el ID de la reparación
+                    const servicio = servicios.find(s => s.id === acceptedServicioId)
+                    const reparacionId = servicio?.fields?.Reparaciones 
+                      ? (Array.isArray(servicio.fields.Reparaciones) 
+                          ? servicio.fields.Reparaciones[0] 
+                          : servicio.fields.Reparaciones)
+                      : acceptedServicioId
+                    window.location.href = `/cita?id=${reparacionId}`
                   }}
                   className="w-full bg-[#008606] hover:bg-[#008606]/90 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl"
                 >
@@ -281,53 +289,57 @@ export default function TecnicoPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white lg:bg-gray-50 flex items-center justify-center p-4 lg:p-8">
-      <div className="max-w-md lg:max-w-6xl w-full space-y-6">
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 lg:p-6 mb-6">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <h1 className="text-xl lg:text-3xl font-bold text-gray-900">
-              Servicios asignados
-            </h1>
-            <div className="flex items-center gap-2 lg:gap-3">
-              <button
-                onClick={() => window.open('https://formacion.ritest.es/reparadores', '_blank', 'noopener,noreferrer')}
-                className="flex-1 lg:flex-none bg-[#008606] hover:bg-[#008606]/90 text-white font-semibold py-2.5 px-4 lg:px-6 rounded-xl transition-all duration-200 text-sm lg:text-base whitespace-nowrap"
-              >
-                Acceder a Formación
-              </button>
-              <button
-                onClick={handleLogout}
-                className="text-gray-500 hover:text-red-600 transition-colors p-2.5 rounded-lg hover:bg-gray-50 flex-shrink-0"
-                title="Cerrar sesión"
-              >
-                <LogOut className="w-5 h-5 lg:w-6 lg:h-6" />
-              </button>
-            </div>
+    <div className="min-h-screen bg-gray-50 pb-20 lg:pb-0">
+      <div className="max-w-5xl mx-auto px-4 py-6">
+        {/* Título */}
+        <h1 className="text-3xl font-bold text-gray-900 mb-4">Servicios</h1>
+        
+        {/* Barra de búsqueda estilo WhatsApp */}
+        <div className="mb-4">
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Buscar servicios..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full h-10 pl-4 pr-4 bg-gray-100 border-none rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#008606] focus:bg-white transition-all"
+            />
           </div>
         </div>
 
-        <div className="space-y-4">
-          <div className="flex justify-center items-center">
-            <div className="bg-gray-50 lg:bg-white rounded-xl p-3 lg:p-4 border border-gray-200 lg:shadow-sm inline-flex items-center gap-3">
-              <Filter className="w-4 h-4 lg:w-5 lg:h-5 text-gray-600" />
-              <label className="flex items-center gap-3 text-sm lg:text-base font-medium text-gray-700 cursor-pointer">
-                <span>Ocultar finalizados</span>
-                <Switch
-                  checked={ocultarFinalizados}
-                  onCheckedChange={setOcultarFinalizados}
-                />
-              </label>
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-3 lg:gap-4">
+        {/* Botón filtro */}
+        <div className="mb-6">
+          <button
+            onClick={() => setOcultarFinalizados(!ocultarFinalizados)}
+            className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+              ocultarFinalizados 
+                ? 'bg-gray-800 text-white' 
+                : 'bg-white text-gray-700 border border-gray-200'
+            }`}
+          >
+            Ocultar finalizados
+          </button>
+        </div>
+        
+        {/* Grid de servicios */}
+        <div className="space-y-6">
+          <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
             {loadingServicios ? (
-              <div className="text-center py-12">
+              <div className="col-span-full text-center py-16">
                 <Clock className="w-8 h-8 text-[#008606] animate-spin mx-auto mb-4" />
-                <p className="text-gray-600">Cargando servicios...</p>
+                <p className="text-gray-500 text-sm">Cargando servicios...</p>
               </div>
             ) : servicios.filter(s => {
               const estado = s.fields.Estado?.toLowerCase()
+              const cliente = Array.isArray(s.fields.Cliente) ? s.fields.Cliente[0] : s.fields.Cliente || ''
+              const motivo = s.fields.Motivo || ''
+              
+              // Filtro de búsqueda
+              const matchesSearch = searchTerm === '' || 
+                cliente.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                (typeof motivo === 'string' && motivo.toLowerCase().includes(searchTerm.toLowerCase()))
+              
+              if (!matchesSearch) return false
               
               if (ocultarFinalizados) {
                 // Mostrar solo: Asignado, Aceptado, Citado (ocultar Reparado y No reparado)
@@ -338,13 +350,22 @@ export default function TecnicoPage() {
               // Mostrar todos
               return true
             }).length === 0 ? (
-              <div className="text-center py-12">
-                <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600">No tienes servicios asignados</p>
+              <div className="col-span-full text-center py-16">
+                <FileText className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                <p className="text-gray-500 text-sm">No tienes servicios asignados</p>
               </div>
             ) : (
               servicios.filter(s => {
                 const estado = s.fields.Estado?.toLowerCase()
+                const cliente = Array.isArray(s.fields.Cliente) ? s.fields.Cliente[0] : s.fields.Cliente || ''
+                const motivo = s.fields.Motivo || ''
+                
+                // Filtro de búsqueda
+                const matchesSearch = searchTerm === '' || 
+                  cliente.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                  (typeof motivo === 'string' && motivo.toLowerCase().includes(searchTerm.toLowerCase()))
+                
+                if (!matchesSearch) return false
                 
                 if (ocultarFinalizados) {
                   // Mostrar solo: Asignado, Aceptado, Citado (ocultar Reparado y No reparado)
@@ -357,50 +378,22 @@ export default function TecnicoPage() {
               }).map((servicio) => (
                 <div 
                   key={servicio.id}
-                  className="p-4 lg:p-5 rounded-xl border-2 border-gray-200 hover:border-[#008606] bg-white cursor-pointer transition-all hover:shadow-lg lg:hover:scale-[1.02] duration-200"
+                  className="bg-white border border-gray-200 rounded-lg p-3 cursor-pointer hover:border-[#008606] hover:shadow-sm transition-all duration-200"
                   onClick={() => openServicioDetail(servicio)}
                 >
-                  {/* Nombre y estado en la misma línea */}
                   <div className="flex items-start justify-between gap-2 mb-2">
-                    <h3 className="font-semibold text-gray-900 flex-1 text-base lg:text-lg">
+                    <h3 className="font-semibold text-gray-900 text-sm flex-1 line-clamp-2">
                       {(Array.isArray(servicio.fields.Cliente) ? servicio.fields.Cliente[0] : servicio.fields.Cliente) || 'Cliente sin nombre'}
                     </h3>
-                    <Badge className={getEstadoBadgeColor(servicio)}>
+                    <Badge className={`${getEstadoBadgeColor(servicio)} text-[10px] px-2 py-0.5`}>
                       {servicio.fields.Estado || 'Sin estado'}
                     </Badge>
                   </div>
                   
-                  {/* Motivo */}
                   {servicio.fields['Motivo'] && (
-                    <div className="text-sm lg:text-base text-gray-600 mb-3 pl-0">
+                    <div className="text-xs text-gray-600 line-clamp-2">
                       <span className="font-medium">Motivo: </span>
                       <span>{servicio.fields['Motivo']}</span>
-                    </div>
-                  )}
-                  
-                  {/* Dirección */}
-                  {servicio.fields['Dirección'] && (
-                    <div className="flex items-start gap-2 text-sm lg:text-base text-gray-600 mb-2">
-                      <MapPin className="w-4 h-4 lg:w-5 lg:h-5 mt-0.5 text-[#008606] flex-shrink-0" />
-                      <p className="truncate">{servicio.fields['Dirección']}</p>
-                    </div>
-                  )}
-                  
-                  {/* Población */}
-                  {(servicio.fields['Población'] || servicio.fields['Población del cliente']) && (
-                    <div className="text-sm lg:text-base text-gray-600 mb-2 ml-6 lg:ml-7">
-                      <p className="truncate">
-                        {Array.isArray(servicio.fields['Población del cliente']) 
-                          ? servicio.fields['Población del cliente'][0] 
-                          : servicio.fields['Población del cliente'] || servicio.fields['Población']}
-                      </p>
-                    </div>
-                  )}
-                  
-                  {servicio.fields['Tipo de Servicio'] && (
-                    <div className="flex items-center gap-2 text-sm lg:text-base text-gray-600">
-                      <Wrench className="w-4 h-4 lg:w-5 lg:h-5 text-[#008606]" />
-                      <p className="truncate">{servicio.fields['Tipo de Servicio']}</p>
                     </div>
                   )}
                 </div>
@@ -427,56 +420,336 @@ export default function TecnicoPage() {
           ) : null}
         </DialogContent>
       </Dialog>
+
+      {/* Barra de navegación inferior estilo app móvil */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 lg:hidden z-50">
+        <div className="grid grid-cols-4 h-16">
+          <button className="flex flex-col items-center justify-center gap-1 text-[#008606] bg-gray-50">
+            <Home className="w-5 h-5" />
+            <span className="text-xs font-medium">Inicio</span>
+          </button>
+          
+          <button
+            onClick={() => window.open('https://formacion.ritest.es/reparadores', '_blank', 'noopener,noreferrer')}
+            className="flex flex-col items-center justify-center gap-1 text-gray-600 hover:text-gray-900 transition-colors"
+          >
+            <GraduationCap className="w-5 h-5" />
+            <span className="text-xs font-medium">Formación</span>
+          </button>
+          
+          <a
+            href="https://wa.me/34611563835"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex flex-col items-center justify-center gap-1 text-gray-600 hover:text-gray-900 transition-colors"
+          >
+            <MessageCircle className="w-5 h-5" />
+            <span className="text-xs font-medium">WhatsApp</span>
+          </a>
+          
+          <a
+            href="tel:+34611563835"
+            className="flex flex-col items-center justify-center gap-1 text-gray-600 hover:text-gray-900 transition-colors"
+          >
+            <Phone className="w-5 h-5" />
+            <span className="text-xs font-medium">Teléfono</span>
+          </a>
+        </div>
+      </div>
+
+      {/* Versión desktop - barra superior */}
+      <div className="hidden lg:flex fixed top-0 left-0 right-0 bg-white border-b border-gray-200 px-6 py-3 z-50">
+        <div className="max-w-5xl mx-auto w-full flex items-center gap-4">
+          <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-[#008606] bg-gray-50 rounded-full">
+            <Home className="w-4 h-4" />
+            <span>Inicio</span>
+          </button>
+          
+          <button
+            onClick={() => window.open('https://formacion.ritest.es/reparadores', '_blank', 'noopener,noreferrer')}
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-full transition-colors"
+          >
+            <GraduationCap className="w-4 h-4" />
+            <span>Formación</span>
+          </button>
+          
+          <a
+            href="https://wa.me/34611563835"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-full transition-colors"
+          >
+            <MessageCircle className="w-4 h-4" />
+            <span>WhatsApp</span>
+          </a>
+          
+          <div className="ml-auto">
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-full transition-colors"
+            >
+              <LogOut className="w-4 h-4" />
+              <span>Cerrar sesión</span>
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }
 
-function getCosasARevisar(motivo: string | string[] | undefined): string[] {
+function getPasosResolucion(motivo: string | string[] | undefined, modeloCargador?: string): { pasos: string[], requiereModelo: boolean } {
   // Convertir a string si es un array o manejar undefined/null
   const motivoStr = Array.isArray(motivo) ? motivo[0] : (motivo || '')
   const motivoLower = typeof motivoStr === 'string' ? motivoStr.toLowerCase() : ''
   
-  if (motivoLower.includes('instalación')) {
-    return [
-      'Verificar el cuadro eléctrico y protecciones',
-      'Comprobar la toma de tierra',
-      'Verificar el cableado y conexiones',
-      'Comprobar la instalación del punto de recarga',
-      'Verificar la configuración del equipo',
-      'Realizar pruebas de carga'
-    ]
+  // Sustituir cargador
+  if (motivoLower.includes('sustituir cargador')) {
+    return {
+      pasos: [
+        'Retirar el equipo antiguo',
+        'Instalar el nuevo',
+        'Vincular el cargador a la app',
+        'Configurar la app del cargador (potencia, horarios, GDP y Carga solar si aplica…)',
+        'Completar el parte de trabajo'
+      ],
+      requiereModelo: false
+    }
   }
   
-  if (motivoLower.includes('reparación') || motivoLower.includes('avería')) {
-    return [
-      'Verificar el estado del cuadro eléctrico',
-      'Comprobar las protecciones (magnetotérmico, diferencial)',
-      'Revisar el cableado y conexiones',
-      'Comprobar el punto de recarga',
-      'Verificar errores en el equipo',
-      'Realizar pruebas de funcionamiento'
-    ]
+  // Sustituir protecciones
+  if (motivoLower.includes('sustituir protecciones')) {
+    return {
+      pasos: [
+        'Retirar el componente antiguo',
+        'Instalar el nuevo',
+        'Hacer comprobaciones de correcto funcionamiento',
+        'Completar el parte de trabajo'
+      ],
+      requiereModelo: false
+    }
   }
   
-  if (motivoLower.includes('mantenimiento')) {
-    return [
-      'Inspección visual del equipo',
-      'Verificar protecciones eléctricas',
-      'Revisar conexiones y cableado',
-      'Comprobar funcionamiento del punto de recarga',
-      'Limpiar y verificar conectores',
-      'Realizar pruebas de carga'
-    ]
+  // Sustituir GDP
+  if (motivoLower.includes('sustituir gdp')) {
+    return {
+      pasos: [
+        'Retirar el GDO antiguo',
+        'Instalar el nuevo',
+        'Hacer comprobaciones de correcto funcionamiento',
+        'Completar el parte de trabajo'
+      ],
+      requiereModelo: false
+    }
   }
   
-  // Default para cualquier otro motivo
-  return [
-    'Inspección visual del equipo',
-    'Verificar el cuadro eléctrico',
-    'Comprobar las conexiones',
-    'Revisar el funcionamiento',
-    'Documentar hallazgos'
-  ]
+  // Sustituir borna doble
+  if (motivoLower.includes('sustituir borna doble')) {
+    return {
+      pasos: [
+        'Comprar la borna doble',
+        'Retirar la borna antigua',
+        'Instalar la nueva',
+        'Hacer comprobaciones de correcto funcionamiento',
+        'Completar el parte de trabajo'
+      ],
+      requiereModelo: false
+    }
+  }
+  
+  // Diferencial monofásico averiado
+  if (motivoLower.includes('diferencial monofásico averiado')) {
+    return {
+      pasos: [
+        'Comprobar tensión de entrada y salida con el multímetro',
+        'Pulsar botón de test para confirmar el fallo mecánico',
+        'Retirar el componente averiado e instalar el nuevo',
+        'Verificar el correcto apriete de los bornes',
+        'Completar el parte de trabajo'
+      ],
+      requiereModelo: false
+    }
+  }
+  
+  // Diferencial trifásico averiado
+  if (motivoLower.includes('diferencial trifásico averiado')) {
+    return {
+      pasos: [
+        'Comprobar tensión de entrada y salida con el multímetro',
+        'Pulsar botón de test para confirmar el fallo mecánico',
+        'Retirar el componente averiado e instalar el nuevo',
+        'Verificar el correcto apriete de los bornes',
+        'Completar el parte de trabajo'
+      ],
+      requiereModelo: false
+    }
+  }
+  
+  // Sobretensiones monofásico averiado
+  if (motivoLower.includes('sobretensiones monofásico averiado')) {
+    return {
+      pasos: [
+        'Comprobar si el indicador visual de la protección está en rojo (fallo)',
+        'Medir tensión de entrada para descartar anomalías en la red',
+        'Retirar el componente averiado e instalar el nuevo',
+        'Verificar la correcta conexión de la toma de tierra',
+        'Completar el parte de trabajo'
+      ],
+      requiereModelo: false
+    }
+  }
+  
+  // Sobretensiones trifásico averiado
+  if (motivoLower.includes('sobretensiones trifásico averiado')) {
+    return {
+      pasos: [
+        'Comprobar si el indicador visual de la protección está en rojo (fallo)',
+        'Medir tensión de entrada para descartar anomalías en la red',
+        'Retirar el componente averiado e instalar el nuevo',
+        'Verificar la correcta conexión de la toma de tierra',
+        'Completar el parte de trabajo'
+      ],
+      requiereModelo: false
+    }
+  }
+  
+  // Cargador apagado
+  if (motivoLower.includes('cargador apagado')) {
+    return {
+      pasos: [
+        'Comprobar tensión en los bornes de entrada del cargador',
+        'Revisar el estado de las conexiones internas y fusibles de la placa',
+        'Realizar un rearme eléctrico completo desde el cuadro general',
+        'Si tras el rearme no enciende, proceder a la sustitución del equipo',
+        'Completar el parte de trabajo'
+      ],
+      requiereModelo: false
+    }
+  }
+  
+  // Carga a menor potencia
+  if (motivoLower.includes('carga a menor potencia')) {
+    return {
+      pasos: [
+        'Revisar la configuración de potencia del cargador tanto en la página principal cómo en la sección "Gestión de la carga"',
+        'Revisar que no tenga activada ninguna opción de "Carga solar"',
+        'Revisar si existe alguna limitación en el coche',
+        'Restaurar el equipo por la placa electrónica',
+        'Completar el parte de trabajo'
+      ],
+      requiereModelo: false
+    }
+  }
+  
+  // Carga en espera
+  if (motivoLower.includes('carga en espera')) {
+    return {
+      pasos: [
+        'Comprobar que el coche no esté lleno',
+        'Revisar la programación del cargador',
+        'Revisar la programación del coche',
+        'Restaurar el equipo por la placa electrónica',
+        'Completar el parte de trabajo'
+      ],
+      requiereModelo: false
+    }
+  }
+  
+  // Salta la luz del contador - requiere modelo
+  if (motivoLower.includes('salta la luz del contador')) {
+    if (modeloCargador?.toLowerCase().includes('max')) {
+      return {
+        pasos: [
+          'Comprobar que el GDP esté correctamente configurado en la app',
+          'Comprobar que la pinza amperimétrica esté correctamente instalada y que sólo mida el consumo de la vivienda',
+          'Comprobar que tiene la resistencia el GDP',
+          'Pon el interruptor PWR BOOS de la placa electrónica en la posición T',
+          'Completar el parte de trabajo'
+        ],
+        requiereModelo: false
+      }
+    } else if (modeloCargador?.toLowerCase().includes('plus')) {
+      return {
+        pasos: [
+          'Comprobar que el GDP esté correctamente configurado en la app',
+          'Comprobar que la pinza amperimétrica esté correctamente instalada y que sólo mida el consumo de la vivienda',
+          'Comprobar que tiene la resistencia el GDP',
+          'Pon el interruptor RS485 de la placa electrónica en la posición T',
+          'Completar el parte de trabajo'
+        ],
+        requiereModelo: false
+      }
+    }
+    return {
+      pasos: ['Especificar si es Pulsar Max o Pulsar Plus'],
+      requiereModelo: true
+    }
+  }
+  
+  // Instalación GDP - requiere modelo
+  if (motivoLower.includes('instalación gdp')) {
+    if (modeloCargador?.toLowerCase().includes('max')) {
+      return {
+        pasos: [
+          'Instalar el cableado del GDP',
+          'Instalar el GDP poniendo las pinzas en correcto orden',
+          'Pon el interruptor PWR BOOS de la placa electrónica en la posición T',
+          'Poner la resistencia del GDP',
+          'Completar el parte de trabajo'
+        ],
+        requiereModelo: false
+      }
+    } else if (modeloCargador?.toLowerCase().includes('plus')) {
+      return {
+        pasos: [
+          'Instalar el cableado del GDP',
+          'Instalar el GDP poniendo las pinzas en correcto orden',
+          'Pon el interruptor RS485 de la placa electrónica en la posición T',
+          'Poner la resistencia del GDP',
+          'Completar el parte de trabajo'
+        ],
+        requiereModelo: false
+      }
+    }
+    return {
+      pasos: ['Especificar si es Pulsar Max o Pulsar Plus'],
+      requiereModelo: true
+    }
+  }
+  
+  // No se conecta por bluetooth
+  if (motivoLower.includes('no se conecta por bluetooth')) {
+    return {
+      pasos: [
+        'Hacer una restauración de placa electrónica',
+        'Mientras se restaura hay que borrar el dispositivo que empieza por WB- en el Bluetooth del móvil',
+        'Una vez restaurado se debe vincular el cargador a la app Wallbox',
+        'Si esto no funciona se debe probar a hacer el mismo procedimiento pero con otro móvil'
+      ],
+      requiereModelo: false
+    }
+  }
+  
+  // No reconoce el GDP
+  if (motivoLower.includes('no reconoce el gdp')) {
+    return {
+      pasos: [
+        'Comprobar posición cables según diagrama',
+        'Medir 12v en las conexiones inferiores del N1CT',
+        'Si hay 12v, el N1CT debe mostrar un led rojo',
+        'Una vez resuelta cualquier irregularidad, el cargador wallbox se reinicia desde el cuadro eléctrico para que detecte los cambios'
+      ],
+      requiereModelo: false
+    }
+  }
+  
+  // Otros
+  return {
+    pasos: [
+      'Revisar Motivo técnico y si tienes dudas consultar con el número de soporte para técnicos que es el 633 177 456'
+    ],
+    requiereModelo: false
+  }
 }
 
 function DialogContentInner({ 
@@ -491,6 +764,7 @@ function DialogContentInner({
   onShowSuccess: (message: string, type: 'accepted' | 'rejected', servicioId?: string) => void
 }) {
   const [actionLoading, setActionLoading] = useState(false)
+  const [modeloCargador, setModeloCargador] = useState<string>('')
 
   const handleAceptarServicio = async (servicioId: string) => {
     setActionLoading(true)
@@ -543,34 +817,6 @@ function DialogContentInner({
       onShowSuccess('Servicio rechazado correctamente', 'rejected')
     } catch (err: any) {
       alert('Error al rechazar servicio: ' + err.message)
-    } finally {
-      setActionLoading(false)
-    }
-  }
-
-  const handleGenerarEnlaceCita = async (servicioId: string, clienteId: string) => {
-    setActionLoading(true)
-    try {
-      const response = await fetch('/api/tecnico/servicios', {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          servicioId,
-          generarEnlaceCita: true,
-          clienteId,
-        }),
-      })
-
-      if (!response.ok) {
-        throw new Error('Error al generar enlace de cita')
-      }
-
-      await onLoadServicios()
-      alert('Enlace de cita generado correctamente')
-    } catch (err: any) {
-      alert('Error al generar enlace: ' + err.message)
     } finally {
       setActionLoading(false)
     }
@@ -655,8 +901,12 @@ function DialogContentInner({
       </DialogHeader>
 
       <Tabs defaultValue={"accion"} className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value={"accion"}>Acción</TabsTrigger>
+          <TabsTrigger value={"pasos"}>
+            <ClipboardList className="w-4 h-4 mr-1" />
+            Pasos
+          </TabsTrigger>
           <TabsTrigger value={"ubicacion"}>
             <Navigation className="w-4 h-4 mr-1" />
             Ubicación
@@ -777,54 +1027,24 @@ function DialogContentInner({
         )}
 
 
-        {servicio.fields.Estado?.toLowerCase() === 'aceptado' ? (
-          <div className="border-2 border-green-500 rounded-lg p-4">
-            <h4 className="text-base font-semibold text-gray-900 mb-2">Siguiente Paso: Generar Cita</h4>
-            <p className="text-sm text-gray-600 mb-4">
-              El servicio ha sido aceptado. Genera el enlace de cita para el cliente.
-            </p>
-            {servicio.fields['Enlace Cita'] ? (
-              <div className="space-y-3">
-                <Alert className="border-green-200 bg-green-50">
-                  <Calendar className="h-4 w-4 text-green-600" />
-                  <AlertDescription className="text-sm text-green-800">
-                    Enlace de cita generado
-                  </AlertDescription>
-                </Alert>
-                <div className="p-3 bg-gray-50 rounded-lg border border-gray-200 break-all text-sm">
-                  <a 
-                    href={servicio.fields['Enlace Cita']} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="text-blue-600 hover:underline"
-                  >
-                    {servicio.fields['Enlace Cita']}
-                  </a>
-                </div>
-                <button
-                  onClick={() => {
-                    navigator.clipboard.writeText(servicio.fields['Enlace Cita'] || '')
-                    alert('Enlace copiado al portapapeles')
-                  }}
-                  className="w-full bg-gray-100 hover:bg-gray-200 text-gray-900 font-semibold py-3 px-6 rounded-xl transition-all duration-200"
-                >
-                  Copiar Enlace
-                </button>
-              </div>
-            ) : (
-              <button
-                onClick={() => handleGenerarEnlaceCita(
-                  servicio.id,
-                  servicio.fields['ID Cliente'] || ''
-                )}
-                disabled={actionLoading}
-                className="w-full bg-[#008606] hover:bg-[#008606]/90 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50"
-              >
-                Generar Enlace de Cita
-              </button>
-            )}
-          </div>
-        ) : servicio.fields.Estado?.toLowerCase() === 'citado' ? (
+        {servicio.fields.Estado?.toLowerCase() === 'aceptado' && (
+          <button
+            onClick={() => {
+              // Obtener el ID de la reparación del campo Reparaciones
+              const reparacionId = servicio.fields.Reparaciones 
+                ? (Array.isArray(servicio.fields.Reparaciones) 
+                    ? servicio.fields.Reparaciones[0] 
+                    : servicio.fields.Reparaciones)
+                : servicio.id
+              window.location.href = `/cita?id=${reparacionId}`
+            }}
+            className="w-full bg-[#008606] hover:bg-[#008606]/90 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl"
+          >
+            Programar Cita
+          </button>
+        )}
+        
+        {servicio.fields.Estado?.toLowerCase() === 'citado' && (
           <>
             {servicio.fields['Cita técnico'] && (
               <Alert className="border-green-200 bg-green-50 mb-3">
@@ -837,8 +1057,13 @@ function DialogContentInner({
             <div className="space-y-3">
               <button
                 onClick={() => {
-                  // Como estamos trabajando directamente con reparaciones, el id es el id de la reparación
-                  window.open(`/parte?id=${servicio.id}`, '_blank')
+                  // Obtener el ID de la reparación del campo Reparaciones
+                  const reparacionId = servicio.fields.Reparaciones 
+                    ? (Array.isArray(servicio.fields.Reparaciones) 
+                        ? servicio.fields.Reparaciones[0] 
+                        : servicio.fields.Reparaciones)
+                    : servicio.id
+                  window.open(`/parte?id=${reparacionId}`, '_blank')
                 }}
                 className="w-full bg-[#008606] hover:bg-[#008606]/90 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl"
               >
@@ -846,7 +1071,13 @@ function DialogContentInner({
               </button>
               <button
                 onClick={() => {
-                  window.location.href = `/cita?id=${servicio.id}`
+                  // Obtener el ID de la reparación del campo Reparaciones
+                  const reparacionId = servicio.fields.Reparaciones 
+                    ? (Array.isArray(servicio.fields.Reparaciones) 
+                        ? servicio.fields.Reparaciones[0] 
+                        : servicio.fields.Reparaciones)
+                    : servicio.id
+                  window.location.href = `/cita?id=${reparacionId}`
                 }}
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl"
               >
@@ -854,7 +1085,7 @@ function DialogContentInner({
               </button>
             </div>
           </>
-        ) : null}
+        )}
         </TabsContent>
 
         <TabsContent value={"ubicacion"} className="space-y-4 mt-4">
@@ -922,16 +1153,10 @@ function DialogContentInner({
             <button
               onClick={() => {
                 const direccion = servicio.fields['Dirección']
-                const poblacion = Array.isArray(servicio.fields['Población del cliente']) 
-                  ? servicio.fields['Población del cliente'][0] 
-                  : servicio.fields['Población del cliente'] || servicio.fields['Población'] || ''
-                const provincia = Array.isArray(servicio.fields['Provincia']) 
-                  ? servicio.fields['Provincia'][0] 
-                  : servicio.fields['Provincia'] || ''
                 const codigoPostal = Array.isArray(servicio.fields['Código postal']) 
                   ? servicio.fields['Código postal'][0] 
                   : servicio.fields['Código postal'] || ''
-                const direccionCompleta = `${direccion}, ${codigoPostal} ${poblacion}, ${provincia}`.trim()
+                const direccionCompleta = `${direccion} ${codigoPostal}`.trim()
                 const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(direccionCompleta)}`
                 window.open(url, '_blank', 'noopener,noreferrer')
               }}
@@ -940,6 +1165,77 @@ function DialogContentInner({
               <Navigation className="w-5 h-5" />
               Abrir en Google Maps
             </button>
+          )}
+        </TabsContent>
+
+        <TabsContent value={"pasos"} className="space-y-4 mt-4">
+          {servicio.fields['Motivo'] ? (() => {
+            const motivoTecnico = servicio.fields['Motivo']
+            const { pasos, requiereModelo } = getPasosResolucion(motivoTecnico, modeloCargador)
+            
+            return (
+              <>
+                <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                  <h4 className="text-base font-semibold text-gray-900 mb-3">
+                    Pasos de Resolución
+                  </h4>
+                  
+                  {requiereModelo && (
+                    <div className="mb-4">
+                      <Label className="text-sm font-medium text-gray-700 mb-3 block">
+                        Selecciona el modelo del cargador:
+                      </Label>
+                      <div className="grid grid-cols-2 gap-3">
+                        <button
+                          onClick={() => setModeloCargador('Pulsar Max')}
+                          className={`p-4 border-2 rounded-lg font-semibold text-sm transition-all ${
+                            modeloCargador === 'Pulsar Max'
+                              ? 'border-[#008606] bg-[#008606] text-white'
+                              : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
+                          }`}
+                        >
+                          Pulsar Max
+                        </button>
+                        <button
+                          onClick={() => setModeloCargador('Pulsar Plus')}
+                          className={`p-4 border-2 rounded-lg font-semibold text-sm transition-all ${
+                            modeloCargador === 'Pulsar Plus'
+                              ? 'border-[#008606] bg-[#008606] text-white'
+                              : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
+                          }`}
+                        >
+                          Pulsar Plus
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {(!requiereModelo || modeloCargador) && (
+                    <div className="space-y-3">
+                      <p className="text-xs text-gray-600 mb-2">
+                        Motivo técnico: <span className="font-medium text-gray-900">{motivoTecnico}</span>
+                      </p>
+                    <ol className="space-y-3">
+                      {pasos.map((paso, index) => (
+                        <li key={index} className="flex gap-3">
+                          <span className="flex-shrink-0 w-6 h-6 bg-[#008606] text-white rounded-full flex items-center justify-center text-xs font-semibold">
+                            {index + 1}
+                          </span>
+                          <span className="text-sm text-gray-800 flex-1 pt-0.5">
+                            {paso}
+                          </span>
+                        </li>
+                      ))}
+                    </ol>
+                    </div>
+                  )}
+                </div>
+              </>
+            )
+          })() : (
+            <div className="p-4 bg-gray-50 rounded-lg border border-gray-200 text-center">
+              <p className="text-sm text-gray-600">No hay motivo técnico especificado para este servicio</p>
+            </div>
           )}
         </TabsContent>
       </Tabs>
