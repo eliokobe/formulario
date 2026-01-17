@@ -65,13 +65,43 @@ cd formulario-ritest
 npm install
 ```
 
-### **3. Configurar Variables de Entorno**
-Crear archivo `.env.local`:
+### **3. Configurar Variables de Entorno** 🔒
 ```bash
-AIRTABLE_ACCESS_TOKEN=tu_token_aquí
-AIRTABLE_BASE_ID=appX3CBiSmPy4119D
-AIRTABLE_TABLE_NAME=Reparaciones
+# Copiar plantilla de variables de entorno
+cp .env.example .env.local
+
+# Editar .env.local con tus valores reales
+# ⚠️ IMPORTANTE: Nunca subas .env.local a Git
 ```
+
+**Contenido de `.env.local`:**
+```env
+# Airtable (SOLO SERVIDOR - No se expone al cliente)
+AIRTABLE_TOKEN=tu_token_personal_de_airtable
+AIRTABLE_BASE_ID=appX3CBiSmPy4119D
+AIRTABLE_TABLE_REPARACIONES=Reparaciones
+AIRTABLE_TABLE_FORMULARIO=Formularios
+AIRTABLE_TABLE_NAME=Servicios
+AIRTABLE_TABLE_CLIENTES=Servicios
+AIRTABLE_TABLE_SERVICIOS=Servicios
+
+# UploadThing
+UPLOADTHING_SECRET=tu_uploadthing_secret
+UPLOADTHING_APP_ID=tu_uploadthing_app_id
+```
+
+> 🔐 **Seguridad**: Las API keys se mantienen en el servidor y NUNCA se exponen al navegador. Lee [SEGURIDAD.md](SEGURIDAD.md) para más detalles.
+
+### **4. Verificar Configuración de Seguridad** ✅
+```bash
+npm run check-security
+```
+
+Este comando verifica que:
+- ✅ Las variables de entorno estén configuradas
+- ✅ No haya API keys hardcodeadas
+- ✅ `.env.local` esté en `.gitignore`
+- ✅ No haya llamadas directas a Airtable desde el cliente
 
 ### **4. Configurar Airtable**
 
@@ -87,6 +117,34 @@ AIRTABLE_TABLE_NAME=Reparaciones
 ### **5. Ejecutar en Desarrollo**
 ```bash
 npm run dev
+```
+
+Abre [http://localhost:3000](http://localhost:3000) en tu navegador.
+
+## 🔒 Seguridad
+
+### **Arquitectura Segura**
+
+```
+┌─────────────┐         ┌──────────────┐         ┌───────────┐
+│  Frontend   │ ---->   │   Next.js    │ ---->   │ Airtable  │
+│ (Navegador) │ API     │   Backend    │ API     │    API    │
+│  SIN claves │ /api/*  │  CON claves  │ Bearer  │           │
+└─────────────┘         └──────────────┘         └───────────┘
+```
+
+**Características de Seguridad:**
+- ✅ API keys solo en el servidor (nunca en el navegador)
+- ✅ Middleware de seguridad en todas las rutas API
+- ✅ Headers de seguridad HTTP (CSP, HSTS, etc.)
+- ✅ Variables de entorno protegidas en `.gitignore`
+- ✅ Sin exposición de credenciales en el cliente
+
+**Para más información:** Lee la [Guía de Seguridad Completa](SEGURIDAD.md)
+
+**Verificar seguridad:**
+```bash
+npm run check-security
 ```
 
 ## 🔗 URLs y Navegación
@@ -129,17 +187,49 @@ formulario-ritest/
 
 ## 🚀 Deployment
 
-### **Vercel (Recomendado)**
+### **Vercel / DigitalOcean / Otros (Recomendado)**
+
+1. **Build del proyecto:**
 ```bash
 npm run build
-vercel --prod
 ```
 
-### **Variables de Entorno en Producción**
-Configurar en el panel de Vercel:
-- `AIRTABLE_ACCESS_TOKEN`
-- `AIRTABLE_BASE_ID` 
-- `AIRTABLE_TABLE_NAME`
+2. **Configurar Variables de Entorno en la Plataforma:**
+
+**⚠️ CRÍTICO:** Configura estas variables en el panel de tu hosting (NO en el código):
+
+```env
+AIRTABLE_TOKEN=tu_token_personal_aqui
+AIRTABLE_BASE_ID=appX3CBiSmPy4119D
+AIRTABLE_TABLE_REPARACIONES=Reparaciones
+AIRTABLE_TABLE_FORMULARIO=Formularios
+AIRTABLE_TABLE_NAME=Servicios
+AIRTABLE_TABLE_CLIENTES=Servicios
+AIRTABLE_TABLE_SERVICIOS=Servicios
+UPLOADTHING_SECRET=tu_uploadthing_secret
+UPLOADTHING_APP_ID=tu_uploadthing_app_id
+NODE_ENV=production
+```
+
+3. **Deploy:**
+```bash
+# Vercel
+vercel --prod
+
+# O desde el panel web de tu plataforma
+```
+
+### **Verificar Seguridad Post-Deploy**
+
+Después del deploy, verifica en DevTools del navegador:
+1. Abre Network tab (F12)
+2. Recarga la página
+3. Verifica que:
+   - ✅ Solo ves peticiones a `/api/*` (tu dominio)
+   - ✅ NO ves peticiones a `api.airtable.com`
+   - ✅ NO ves headers `Authorization: Bearer pat...`
+
+> 📘 **Guía completa de seguridad:** [SEGURIDAD.md](SEGURIDAD.md)
 
 ## 🔧 Uso y Configuración
 

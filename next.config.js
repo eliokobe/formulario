@@ -20,7 +20,10 @@ const nextConfig = {
   generateEtags: false,
   // Add trailing slash for better SEO
   trailingSlash: false,
-  // Configure headers for better security
+  
+  // =====================================================
+  // SEGURIDAD: Headers de seguridad mejorados
+  // =====================================================
   async headers() {
     return [
       {
@@ -37,6 +40,36 @@ const nextConfig = {
           {
             key: 'X-XSS-Protection',
             value: '1; mode=block',
+          },
+          {
+            // Política de seguridad de contenido
+            key: 'Content-Security-Policy',
+            value: "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:;",
+          },
+          {
+            // Prevenir que el navegador infiera el MIME type
+            key: 'X-Download-Options',
+            value: 'noopen',
+          },
+          {
+            // Protección adicional contra clickjacking
+            key: 'X-Permitted-Cross-Domain-Policies',
+            value: 'none',
+          },
+          {
+            // Forzar HTTPS (ajusta max-age según necesites)
+            key: 'Strict-Transport-Security',
+            value: 'max-age=31536000; includeSubDomains',
+          },
+        ],
+      },
+      {
+        // Headers específicos para rutas API - protección adicional
+        source: '/api/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'no-store, no-cache, must-revalidate',
           },
         ],
       },
