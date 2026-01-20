@@ -20,6 +20,31 @@ const nextConfig = {
   generateEtags: false,
   // Add trailing slash for better SEO
   trailingSlash: false,
+
+  async redirects() {
+    return [
+      {
+        source: '/tecnico',
+        destination: 'https://tecnicos.ritest.es/',
+        permanent: true,
+      },
+      {
+        source: '/tecnicos',
+        destination: 'https://tecnicos.ritest.es/',
+        permanent: true,
+      },
+      {
+        source: '/tecnico/:path*',
+        destination: 'https://tecnicos.ritest.es/',
+        permanent: true,
+      },
+      {
+        source: '/tecnicos/:path*',
+        destination: 'https://tecnicos.ritest.es/',
+        permanent: true,
+      },
+    ]
+  },
   
   // =====================================================
   // SEGURIDAD: Headers de seguridad mejorados

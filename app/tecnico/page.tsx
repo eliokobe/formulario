@@ -108,7 +108,7 @@ export default function TecnicoPage() {
   }
 
   const loadServicios = async (tecnicoId?: string, tecnicoTelefono?: string) => {
-    const id = tecnicoId || tecnicoData?.id
+    const id = tecnicoId || tecnicoData?.idAl 
     const telefono = tecnicoTelefono || tecnicoData?.fields?.Teléfono
     if (!id || !telefono) return
 
