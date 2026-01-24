@@ -249,7 +249,7 @@ export function CitaForm({ onComplete, onError }: CitaFormProps) {
                 selectedTime={selectedTime}
                 onTimeSelect={handleTimeSelect}
                 slotType="hourly"
-                checkAvailability={false}
+                checkAvailability={true}
               />
               {errors.hora && (
                 <p className="text-red-600 text-sm mt-2 text-center">{errors.hora}</p>

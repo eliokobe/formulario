@@ -4,13 +4,14 @@ interface AirtableResponse {
 }
 
 const AIRTABLE_TOKEN = process.env.AIRTABLE_TOKEN;
-const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID;
+const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID || 'appX3CBiSmPy4119D';
 const AIRTABLE_TABLE_REPARACIONES = process.env.AIRTABLE_TABLE_REPARACIONES;
 const AIRTABLE_TABLE_FORMULARIO = process.env.AIRTABLE_TABLE_FORMULARIO;
 const AIRTABLE_TABLE_BOOKINGS = process.env.AIRTABLE_TABLE_NAME;
 const AIRTABLE_TABLE_CLIENTES = process.env.AIRTABLE_TABLE_CLIENTES;
 const AIRTABLE_TABLE_SERVICIOS = process.env.AIRTABLE_TABLE_SERVICIOS;
 const AIRTABLE_TABLE_ENVIOS = process.env.AIRTABLE_TABLE_ENVIOS || 'Envíos';
+const AIRTABLE_TABLE_BLOQUEOS = process.env.AIRTABLE_TABLE_BLOQUEOS || 'Bloqueos';
 
 // Nueva base de Airtable para servicios generales
 const AIRTABLE_SERVICIOS_BASE_ID = 'appcRKAwnzR4sdGPL';
@@ -187,6 +188,24 @@ export async function updateRecord(tableName: string, id: string, fields: Record
   }
 }
 
+export async function deleteRecord(tableName: string, recordId: string): Promise<{ id: string }> {
+  try {
+    const url = `${getBaseUrl(tableName)}/${recordId}`;
+    const response = await makeRequest(url, { method: 'DELETE' });
+    if (!response) {
+      throw new Error('No response received from Airtable');
+    }
+    const data: any = await response.json();
+    if (!data?.id) {
+      throw new Error('No ID returned from Airtable delete');
+    }
+    return { id: data.id };
+  } catch (error) {
+    console.error(`Error deleting record ${recordId} from ${tableName}:`, error);
+    throw new Error(`Failed to delete record from ${tableName}`);
+  }
+}
+
 // Booking helpers
 export async function findByDateTime(dateTime: string): Promise<any | null> {
   if (!AIRTABLE_TABLE_BOOKINGS) {
@@ -213,6 +232,53 @@ export async function createBooking(fields: { name: string; email: string; date_
   };
 
   return createRecord(AIRTABLE_TABLE_BOOKINGS, payload);
+}
+
+// Bloqueos helpers
+export async function listBloqueos(params?: Record<string, string>): Promise<any[]> {
+  return listRecords(AIRTABLE_TABLE_BLOQUEOS, params);
+}
+
+export async function createBloqueo(fields: { inicio: string; fin: string; motivo?: string }): Promise<{ id: string }> {
+  const payload = {
+    Inicio: fields.inicio,
+    Fin: fields.fin,
+    Motivo: fields.motivo,
+  };
+  return createRecord(AIRTABLE_TABLE_BLOQUEOS, payload);
+}
+
+export async function deleteBloqueo(recordId: string): Promise<{ id: string }> {
+  return deleteRecord(AIRTABLE_TABLE_BLOQUEOS, recordId);
+}
+
+export async function getBloqueosByDate(fecha: Date): Promise<any[]> {
+  const startOfDayUtc = new Date(Date.UTC(fecha.getUTCFullYear(), fecha.getUTCMonth(), fecha.getUTCDate(), 0, 0, 0));
+  const endOfDayUtc = new Date(Date.UTC(fecha.getUTCFullYear(), fecha.getUTCMonth(), fecha.getUTCDate(), 23, 59, 59));
+  const filterFormula = `AND(
+    NOT({Inicio} = BLANK()),
+    NOT({Fin} = BLANK()),
+    {Inicio} <= DATETIME_PARSE('${endOfDayUtc.toISOString()}'),
+    {Fin} >= DATETIME_PARSE('${startOfDayUtc.toISOString()}')
+  )`;
+
+  try {
+    const records = await listRecords(AIRTABLE_TABLE_BLOQUEOS, {
+      filterByFormula: filterFormula,
+      'sort[0][field]': 'Inicio',
+      'sort[0][direction]': 'desc',
+    });
+
+    return records.map(record => ({
+      id: record.id,
+      inicio: record.fields['Inicio'],
+      fin: record.fields['Fin'],
+      motivo: record.fields['Motivo'] || '',
+    }));
+  } catch (error) {
+    console.error('Error al obtener bloqueos por fecha:', error);
+    throw new Error('Failed to get bloqueos by date');
+  }
 }
 
 // Specific function for creating repairs
