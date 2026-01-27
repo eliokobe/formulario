@@ -53,6 +53,7 @@ export default function ReparacionForm({ recordId, onSuccess, onError }: Reparac
   const [errors, setErrors] = useState<Errors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
+  const [isCitaPassed, setIsCitaPassed] = useState(false);
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -86,6 +87,27 @@ export default function ReparacionForm({ recordId, onSuccess, onError }: Reparac
           };
           console.log('📝 Setting form data:', newFormData);
           setFormData(newFormData);
+          
+          // Verificar si la cita ya ha pasado
+          console.log('📅 Verificando cita:', data.cita);
+          if (data.cita && data.cita !== '') {
+            const citaDate = new Date(data.cita);
+            const now = new Date();
+            console.log('📅 Fecha de cita parseada:', citaDate);
+            console.log('📅 Fecha actual:', now);
+            console.log('📅 ¿Cita es válida?:', !isNaN(citaDate.getTime()));
+            console.log('📅 ¿Cita < Ahora?:', citaDate < now);
+            
+            if (!isNaN(citaDate.getTime()) && citaDate < now) {
+              console.log('⚠️ La cita ha pasado:', data.cita);
+              onError?.('La cita ha pasado por lo que no se puede modificar el formulario');
+              return;
+            } else {
+              console.log('✅ La cita no ha pasado o es futura');
+            }
+          } else {
+            console.log('📅 No hay cita definida en el registro');
+          }
           
           // Los campos cliente y direccion siempre son readonly si vienen de Airtable
           // El telefono es opcional
@@ -224,6 +246,18 @@ export default function ReparacionForm({ recordId, onSuccess, onError }: Reparac
   return (
     <div className="min-h-screen bg-white p-4 sm:p-6 flex items-center justify-center">
       <div className="w-full max-w-2xl mx-auto">
+        {/* Mensaje de cita pasada */}
+        {isCitaPassed && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3 text-red-700">
+            <div className="mt-0.5">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            </div>
+            <p className="font-medium text-sm sm:text-base">
+              La cita ha pasado por lo que no se puede modificar el formulario.
+            </p>
+          </div>
+        )}
+
         {/* Progress Steps Section */}
         <div className="mb-6">
           {/* Progress Bar */}
@@ -265,10 +299,10 @@ export default function ReparacionForm({ recordId, onSuccess, onError }: Reparac
                     type="text"
                     id="cliente"
                     value={formData.cliente}
-                    readOnly={isEditMode}
+                    readOnly={isEditMode || isCitaPassed}
                     className={cn(
                       "w-full px-4 py-4 text-base rounded-xl border transition-all duration-200 focus:shadow-md focus:ring-2 touch-manipulation",
-                      isEditMode
+                      (isEditMode || isCitaPassed)
                         ? "bg-gray-100 border-gray-200 text-gray-700 cursor-not-allowed focus:ring-0 focus:border-gray-200"
                         : errors.cliente 
                           ? "border-red-300 focus:ring-red-200 focus:border-red-400" 
@@ -276,7 +310,7 @@ export default function ReparacionForm({ recordId, onSuccess, onError }: Reparac
                     )}
                     placeholder="Nombre del cliente"
                     onChange={(e) => {
-                      if (!isEditMode) {
+                      if (!isEditMode && !isCitaPassed) {
                         setFormData(prev => ({ ...prev, cliente: e.target.value }));
                         if (errors.cliente) {
                           setErrors(prev => ({ ...prev, cliente: '' }));
@@ -340,17 +374,22 @@ export default function ReparacionForm({ recordId, onSuccess, onError }: Reparac
                     type="text"
                     id="potenciaContratada"
                     value={formData.potenciaContratada}
+                    readOnly={isCitaPassed}
                     className={cn(
                       "w-full px-4 py-4 text-base rounded-xl border transition-all duration-200 focus:shadow-md focus:ring-2 touch-manipulation",
-                      errors.potenciaContratada 
-                        ? "border-red-300 focus:ring-red-200 focus:border-red-400" 
-                        : "border-gray-300 focus:ring-green-200 focus:border-green-400"
+                      isCitaPassed
+                        ? "bg-gray-100 border-gray-200 text-gray-700 cursor-not-allowed focus:ring-0 focus:border-gray-200"
+                        : errors.potenciaContratada 
+                          ? "border-red-300 focus:ring-red-200 focus:border-red-400" 
+                          : "border-gray-300 focus:ring-green-200 focus:border-green-400"
                     )}
                     placeholder="Ej: 5.75"
                     onChange={(e) => {
-                      setFormData(prev => ({ ...prev, potenciaContratada: e.target.value }));
-                      if (errors.potenciaContratada) {
-                        setErrors(prev => ({ ...prev, potenciaContratada: '' }));
+                      if (!isCitaPassed) {
+                        setFormData(prev => ({ ...prev, potenciaContratada: e.target.value }));
+                        if (errors.potenciaContratada) {
+                          setErrors(prev => ({ ...prev, potenciaContratada: '' }));
+                        }
                       }
                     }}
                   />
@@ -371,13 +410,17 @@ export default function ReparacionForm({ recordId, onSuccess, onError }: Reparac
                     value={formData.fechaInstalacion}
                     placeholder="DD/MM/YYYY"
                     maxLength={10}
+                    readOnly={isCitaPassed}
                     className={cn(
                       "w-full px-4 py-4 text-base rounded-xl border transition-all duration-200 focus:shadow-md focus:ring-2 touch-manipulation",
-                      errors.fechaInstalacion 
-                        ? "border-red-300 focus:ring-red-200 focus:border-red-400" 
-                        : "border-gray-300 focus:ring-green-200 focus:border-green-400"
+                      isCitaPassed
+                        ? "bg-gray-100 border-gray-200 text-gray-700 cursor-not-allowed focus:ring-0 focus:border-gray-200"
+                        : errors.fechaInstalacion 
+                          ? "border-red-300 focus:ring-red-200 focus:border-red-400" 
+                          : "border-gray-300 focus:ring-green-200 focus:border-green-400"
                     )}
                     onChange={(e) => {
+                      if (isCitaPassed) return;
                       const value = e.target.value;
                       // Solo permitir números y barras
                       const cleanValue = value.replace(/[^\d]/g, '');
@@ -431,6 +474,7 @@ export default function ReparacionForm({ recordId, onSuccess, onError }: Reparac
                 <FileUpload
                   label=""
                   onFileSelect={(files) => setFiles(prev => ({ ...prev, fotoGeneral: files }))}
+                  disabled={isCitaPassed}
                   accept={{
                     'image/*': [],
                   }}
@@ -450,6 +494,7 @@ export default function ReparacionForm({ recordId, onSuccess, onError }: Reparac
                 <FileUpload
                   label=""
                   onFileSelect={(files) => setFiles(prev => ({ ...prev, fotoEtiqueta: files }))}
+                  disabled={isCitaPassed}
                   accept={{
                     'image/*': [],
                   }}
@@ -484,6 +529,7 @@ export default function ReparacionForm({ recordId, onSuccess, onError }: Reparac
                 <FileUpload
                   label=""
                   onFileSelect={(files) => setFiles(prev => ({ ...prev, fotoCuadroElectrico: files }))}
+                  disabled={isCitaPassed}
                   accept={{
                     'image/*': [],
                   }}
@@ -503,6 +549,7 @@ export default function ReparacionForm({ recordId, onSuccess, onError }: Reparac
                 <FileUpload
                   label=""
                   onFileSelect={(files) => setFiles(prev => ({ ...prev, fotoRoto: files }))}
+                  disabled={isCitaPassed}
                   accept={{
                     'image/*': [],
                   }}
@@ -534,7 +581,9 @@ export default function ReparacionForm({ recordId, onSuccess, onError }: Reparac
                 <textarea
                   id="detalles"
                   value={formData.detalles}
+                  readOnly={isCitaPassed}
                   onChange={(e) => {
+                    if (isCitaPassed) return;
                     setFormData(prev => ({ ...prev, detalles: e.target.value }));
                     if (errors.detalles) {
                       setErrors(prev => ({ ...prev, detalles: '' }));
@@ -543,9 +592,11 @@ export default function ReparacionForm({ recordId, onSuccess, onError }: Reparac
                   rows={5}
                   className={cn(
                     "w-full px-4 py-4 text-base rounded-xl border transition-all duration-200 focus:shadow-md resize-none focus:ring-2",
-                    errors.detalles 
-                      ? "border-red-300 focus:ring-red-200 focus:border-red-400" 
-                      : "border-gray-300 focus:ring-green-200 focus:border-green-400"
+                    isCitaPassed
+                      ? "bg-gray-100 border-gray-200 text-gray-700 cursor-not-allowed focus:ring-0 focus:border-gray-200"
+                      : errors.detalles 
+                        ? "border-red-300 focus:ring-red-200 focus:border-red-400" 
+                        : "border-gray-300 focus:ring-green-200 focus:border-green-400"
                   )}
                   placeholder=""
                 />
@@ -577,8 +628,13 @@ export default function ReparacionForm({ recordId, onSuccess, onError }: Reparac
           <button
             type="button"
             onClick={currentStep === 4 ? handleSubmit : nextStep}
-            disabled={isSubmitting}
-            className="flex-1 min-w-[140px] flex items-center justify-center gap-2 bg-[#008606] hover:bg-[#008606]/90 active:scale-95 text-white font-semibold px-6 py-4 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl touch-manipulation"
+            disabled={isSubmitting || (currentStep === 4 && isCitaPassed)}
+            className={cn(
+              "flex-1 min-w-[140px] flex items-center justify-center gap-2 font-semibold px-6 py-4 rounded-xl transition-all duration-200 shadow-lg touch-manipulation",
+              (isSubmitting || (currentStep === 4 && isCitaPassed))
+                ? "bg-gray-300 text-gray-500 cursor-not-allowed shadow-none"
+                : "bg-[#008606] hover:bg-[#008606]/90 active:scale-95 text-white hover:shadow-xl"
+            )}
           >
             {isSubmitting ? (
               <>

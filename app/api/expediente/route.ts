@@ -43,6 +43,7 @@ export async function GET(request: NextRequest) {
       expediente: record.fields['Expediente'],
       cliente: record.fields['Cliente'],
       telefono: record.fields['Teléfono'],
+      email: record.fields['Email'],
       direccion: record.fields['Dirección'],
       potenciaContratada: record.fields['Potencia contratada'],
       fechaInstalacion: record.fields['Fecha instalación'],
@@ -123,6 +124,24 @@ export async function PUT(request: NextRequest) {
       console.log('✅ Found record ID:', targetRecordId);
     }
 
+    // Verificar si la cita ya ha pasado
+    console.log('📅 Verificando si la cita ha pasado...');
+    const existingRecord = await getFormularioById(targetRecordId);
+    if (existingRecord?.fields?.Cita) {
+      const citaDate = new Date(existingRecord.fields.Cita);
+      const now = new Date();
+      console.log('📅 Fecha de cita:', citaDate);
+      console.log('📅 Fecha actual:', now);
+      if (citaDate < now) {
+        console.log('⚠️ La cita ha pasado, bloqueando actualización');
+        return NextResponse.json(
+          { error: 'La cita ha pasado por lo que no se puede modificar el formulario' },
+          { status: 403 }
+        );
+      }
+      console.log('✅ La cita no ha pasado, permitiendo actualización');
+    }
+
     // Preparar campos de texto para actualizar
     const fieldsToUpdate: any = {};
     
@@ -134,6 +153,10 @@ export async function PUT(request: NextRequest) {
     if (body['Teléfono']) {
       console.log('📝 Processing Teléfono');
       fieldsToUpdate['Teléfono'] = body['Teléfono'];
+    }
+    if (body['Email']) {
+      console.log('📝 Processing Email');
+      fieldsToUpdate['Email'] = body['Email'];
     }
     if (body['Dirección']) {
       console.log('📝 Processing Dirección');

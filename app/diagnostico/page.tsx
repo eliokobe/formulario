@@ -97,12 +97,14 @@ export default function DiagnosticoPage() {
             <p className="text-gray-600 mb-8">
               {message}
             </p>
-            <button
-              onClick={resetForm}
-              className="w-full bg-[#008606] hover:bg-[#008606]/90 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl"
-            >
-              Volver al Formulario
-            </button>
+            {!message.includes('cita ha pasado') && (
+              <button
+                onClick={resetForm}
+                className="w-full bg-[#008606] hover:bg-[#008606]/90 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl"
+              >
+                Volver al Formulario
+              </button>
+            )}
           </motion.div>
         </div>
         {toast.isVisible && (

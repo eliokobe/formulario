@@ -88,6 +88,7 @@ export function TechnicalSupportForm({ onComplete, onError }: TechnicalSupportFo
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTime, setSelectedTime] = useState<string>('');
   const [trabajador, setTrabajador] = useState<string>(''); // Trabajador asignado
+  const [isCitaPassed, setIsCitaPassed] = useState(false);
 
   const getTotalSteps = () => {
     return 6; // Actualizado a 6 pasos
@@ -96,6 +97,7 @@ export function TechnicalSupportForm({ onComplete, onError }: TechnicalSupportFo
   const [formData, setFormData] = useState({
     cliente: '',
     telefono: '',
+    email: '',
     direccion: '',
     potenciaContratada: '',
     fechaInstalacion: '',
@@ -160,6 +162,7 @@ export function TechnicalSupportForm({ onComplete, onError }: TechnicalSupportFo
           ...prev,
           cliente: data.cliente || '',
           telefono: String(data.telefono || ''),
+          email: data.email || '',
           direccion: data.direccion || '',
           potenciaContratada: data.potenciaContratada || '',
           fechaInstalacion: convertDateFromAirtable(data.fechaInstalacion || ''),
@@ -167,17 +170,35 @@ export function TechnicalSupportForm({ onComplete, onError }: TechnicalSupportFo
         }));
         
         // Si hay una cita existente, cargarla
-        if (data.cita) {
+        console.log('📅 Verificando cita:', data.cita);
+        if (data.cita && data.cita !== '') {
           try {
             const citaDate = new Date(data.cita);
+            const now = new Date();
+            console.log('📅 Fecha de cita parseada:', citaDate);
+            console.log('📅 Fecha actual:', now);
+            console.log('📅 ¿Cita es válida?:', !isNaN(citaDate.getTime()));
+            console.log('📅 ¿Cita < Ahora?:', citaDate < now);
+            
             setSelectedDate(citaDate);
             const hours = citaDate.getHours().toString().padStart(2, '0');
             const minutes = citaDate.getMinutes().toString().padStart(2, '0');
             setSelectedTime(`${hours}:${minutes}`);
             console.log('📅 Cita existente cargada:', data.cita);
+            
+            // Verificar si la cita ya ha pasado
+            if (!isNaN(citaDate.getTime()) && citaDate < now) {
+              console.log('⚠️ La cita ha pasado:', data.cita);
+              onError('La cita ha pasado por lo que no se puede modificar el formulario');
+              return;
+            } else {
+              console.log('✅ La cita no ha pasado o es futura');
+            }
           } catch (error) {
             console.error('Error al parsear cita existente:', error);
           }
+        } else {
+          console.log('📅 No hay cita definida en el registro');
         }
 
         // Prellenar archivos existentes si los hay
@@ -202,6 +223,15 @@ export function TechnicalSupportForm({ onComplete, onError }: TechnicalSupportFo
         }
         if (!String(formData.telefono).trim()) {
           newErrors.telefono = 'El teléfono es requerido';
+        }
+        if (!formData.email.trim()) {
+          newErrors.email = 'El email es requerido';
+        } else {
+          // Validar formato de email
+          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          if (!emailRegex.test(formData.email)) {
+            newErrors.email = 'Email inválido';
+          }
         }
         if (!formData.direccion.trim()) {
           newErrors.direccion = 'La dirección es requerida';
@@ -343,6 +373,7 @@ export function TechnicalSupportForm({ onComplete, onError }: TechnicalSupportFo
       const supportData = {
         "Cliente": formData.cliente,
         "Teléfono": formData.telefono,
+        "Email": formData.email,
         "Dirección": formData.direccion,
         "Potencia contratada en kW": formData.potenciaContratada,
         "Fecha instalación": convertDateToAirtable(formData.fechaInstalacion),
@@ -415,6 +446,18 @@ export function TechnicalSupportForm({ onComplete, onError }: TechnicalSupportFo
   return (
     <div className="min-h-screen bg-white p-4 sm:p-6 flex items-center justify-center">
       <div className="w-full max-w-2xl mx-auto">
+        {/* Mensaje de cita pasada */}
+        {isCitaPassed && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3 text-red-700">
+            <div className="mt-0.5">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            </div>
+            <p className="font-medium text-sm sm:text-base">
+              La cita ha pasado por lo que no se puede modificar el formulario.
+            </p>
+          </div>
+        )}
+
         {/* Progress Steps Section */}
         <div className="mb-6">
           {/* Progress Bar */}
@@ -456,10 +499,10 @@ export function TechnicalSupportForm({ onComplete, onError }: TechnicalSupportFo
                     type="text"
                     id="cliente"
                     value={formData.cliente}
-                    readOnly={isEditMode}
+                    readOnly={isEditMode || isCitaPassed}
                     className={cn(
                       "w-full px-4 py-4 text-base rounded-xl border transition-all duration-200 focus:shadow-md focus:ring-2 touch-manipulation",
-                      isEditMode
+                      (isEditMode || isCitaPassed)
                         ? "bg-gray-100 border-gray-200 text-gray-700 cursor-not-allowed focus:ring-0 focus:border-gray-200"
                         : errors.cliente 
                           ? "border-red-300 focus:ring-red-200 focus:border-red-400" 
@@ -467,7 +510,7 @@ export function TechnicalSupportForm({ onComplete, onError }: TechnicalSupportFo
                     )}
                     placeholder="Nombre del cliente"
                     onChange={(e) => {
-                      if (!isEditMode) {
+                      if (!isEditMode && !isCitaPassed) {
                         setFormData(prev => ({ ...prev, cliente: e.target.value }));
                         if (errors.cliente) {
                           setErrors(prev => ({ ...prev, cliente: '' }));
@@ -490,7 +533,7 @@ export function TechnicalSupportForm({ onComplete, onError }: TechnicalSupportFo
                     type="tel"
                     id="telefono"
                     value={formData.telefono}
-                    readOnly={isEditMode}
+                    readOnly={isEditMode || isCitaPassed}
                     className={cn(
                       "w-full px-4 py-4 text-base rounded-xl border transition-all duration-200 focus:shadow-md focus:ring-2 touch-manipulation",
                       isEditMode
@@ -501,7 +544,7 @@ export function TechnicalSupportForm({ onComplete, onError }: TechnicalSupportFo
                     )}
                     placeholder="Número de teléfono"
                     onChange={(e) => {
-                      if (!isEditMode) {
+                      if (!isEditMode && !isCitaPassed) {
                         setFormData(prev => ({ ...prev, telefono: e.target.value }));
                         if (errors.telefono) {
                           setErrors(prev => ({ ...prev, telefono: '' }));
@@ -512,6 +555,40 @@ export function TechnicalSupportForm({ onComplete, onError }: TechnicalSupportFo
                 </div>
                 {errors.telefono && (
                   <p className="text-red-600 text-sm mt-1">{errors.telefono}</p>
+                )}
+              </div>
+
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                  Email *
+                </label>
+                <div className="relative">
+                  <input
+                    type="email"
+                    id="email"
+                    value={formData.email}
+                    readOnly={isCitaPassed}
+                    className={cn(
+                      "w-full px-4 py-4 text-base rounded-xl border transition-all duration-200 focus:shadow-md focus:ring-2 touch-manipulation",
+                      isCitaPassed
+                        ? "bg-gray-100 border-gray-200 text-gray-700 cursor-not-allowed focus:ring-0 focus:border-gray-200"
+                        : errors.email 
+                          ? "border-red-300 focus:ring-red-200 focus:border-red-400" 
+                          : "border-gray-300 focus:ring-green-200 focus:border-green-400"
+                    )}
+                    placeholder="correo@ejemplo.com"
+                    onChange={(e) => {
+                      if (!isCitaPassed) {
+                        setFormData(prev => ({ ...prev, email: e.target.value }));
+                        if (errors.email) {
+                          setErrors(prev => ({ ...prev, email: '' }));
+                        }
+                      }
+                    }}
+                  />
+                </div>
+                {errors.email && (
+                  <p className="text-red-600 text-sm mt-1">{errors.email}</p>
                 )}
               </div>
 
@@ -579,9 +656,10 @@ export function TechnicalSupportForm({ onComplete, onError }: TechnicalSupportFo
                   label=""
                   onFileSelect={(files) => setFiles(prev => ({ ...prev, fotoGeneral: files }))}
                   accept={{
-                    'image/*': [],
+                    'image/*': ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.heic', '.heif', '.svg'],
                   }}
                   maxFiles={5}
+                  maxSize={100 * 1024 * 1024}
                 />
                 {errors.fotoGeneral && (
                   <p className="text-red-600 text-sm mt-2">{errors.fotoGeneral}</p>
@@ -606,9 +684,10 @@ export function TechnicalSupportForm({ onComplete, onError }: TechnicalSupportFo
                   label=""
                   onFileSelect={(files) => setFiles(prev => ({ ...prev, fotoEtiqueta: files }))}
                   accept={{
-                    'image/*': [],
+                    'image/*': ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.heic', '.heif', '.svg'],
                   }}
                   maxFiles={5}
+                  maxSize={100 * 1024 * 1024}
                 />
                 {errors.fotoEtiqueta && (
                   <p className="text-red-600 text-sm mt-2">{errors.fotoEtiqueta}</p>
@@ -648,9 +727,10 @@ export function TechnicalSupportForm({ onComplete, onError }: TechnicalSupportFo
                   label=""
                   onFileSelect={(files) => setFiles(prev => ({ ...prev, fotoCuadroElectrico: files }))}
                   accept={{
-                    'image/*': [],
+                    'image/*': ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.heic', '.heif', '.svg'],
                   }}
                   maxFiles={5}
+                  maxSize={100 * 1024 * 1024}
                 />
                 {errors.fotoCuadroElectrico && (
                   <p className="text-red-600 text-sm mt-2">{errors.fotoCuadroElectrico}</p>
@@ -668,9 +748,10 @@ export function TechnicalSupportForm({ onComplete, onError }: TechnicalSupportFo
                   label=""
                   onFileSelect={(files) => setFiles(prev => ({ ...prev, fotoRoto: files }))}
                   accept={{
-                    'image/*': [],
+                    'image/*': ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.heic', '.heif', '.svg'],
                   }}
                   maxFiles={5}
+                  maxSize={100 * 1024 * 1024}
                 />
                 {errors.fotoRoto && (
                   <p className="text-red-600 text-sm mt-2">{errors.fotoRoto}</p>

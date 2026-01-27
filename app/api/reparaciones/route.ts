@@ -21,6 +21,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Verificar si la cita ya ha pasado
+    const existingRecord = await getServicioById(body.recordId);
+    if (existingRecord?.fields?.Cita) {
+      const citaDate = new Date(existingRecord.fields.Cita);
+      if (citaDate < new Date()) {
+        return NextResponse.json(
+          { error: 'La cita ha pasado por lo que no se puede modificar el formulario' },
+          { status: 403 }
+        );
+      }
+    }
+
     // Validación de campos requeridos (solo los que completa el cliente)
     const requiredFields = ['potenciaContratada', 'fechaInstalacion', 'detalles'];
     const missingFields = requiredFields.filter(field => !body[field]?.toString().trim());
@@ -123,6 +135,7 @@ export async function GET(request: NextRequest) {
       fotoEtiqueta: fields['Foto etiqueta'] || [],
       fotoCuadroElectrico: fields['Foto cuadro'] || [],
       fotoRoto: fields['Foto roto'] || [],
+      cita: fields['Cita'] || '',
     });
   } catch (error: any) {
     console.error('Get reparaciones error:', error);

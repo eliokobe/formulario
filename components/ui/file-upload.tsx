@@ -14,6 +14,7 @@ interface FileUploadProps {
   label?: string;
   required?: boolean;
   error?: string;
+  disabled?: boolean;
 }
 
 export function FileUpload({
@@ -28,6 +29,7 @@ export function FileUpload({
   label,
   required,
   error,
+  disabled,
 }: FileUploadProps) {
   const [files, setFiles] = useState<File[]>([]);
   const [uploadError, setUploadError] = useState<string>('');
@@ -36,6 +38,7 @@ export function FileUpload({
   const effectiveMaxSize = maxSize;
 
   const onDrop = useCallback((acceptedFiles: File[], rejectedFiles: FileRejection[]) => {
+    if (disabled) return;
     setUploadError('');
     
     // Handle rejected files
@@ -82,22 +85,31 @@ export function FileUpload({
       <div
         {...getRootProps()}
         className={cn(
-          "border-2 border-dashed rounded-lg p-4 sm:p-6 text-center cursor-pointer transition-colors touch-manipulation active:scale-95",
-          isDragActive ? "border-green-400 bg-green-50" : "border-gray-300 hover:border-gray-400",
+          "border-2 border-dashed rounded-lg p-4 sm:p-6 text-center transition-colors touch-manipulation",
+          disabled 
+            ? "border-gray-200 bg-gray-50 cursor-not-allowed" 
+            : "cursor-pointer active:scale-95 border-gray-300 hover:border-gray-400",
+          isDragActive && !disabled ? "border-green-400 bg-green-50" : "",
           error && "border-red-300 bg-red-50"
         )}
       >
-        <input {...getInputProps()} />
-        <Upload className="w-8 h-8 sm:w-10 sm:h-10 text-gray-400 mx-auto mb-2" />
-        {isDragActive ? (
+        <input {...getInputProps()} disabled={disabled} />
+        <Upload className={cn("w-8 h-8 sm:w-10 sm:h-10 mx-auto mb-2", disabled ? "text-gray-300" : "text-gray-400")} />
+        {isDragActive && !disabled ? (
           <p className="text-green-600 text-sm sm:text-base font-medium">Suelta los archivos aquí...</p>
         ) : (
           <div>
-            <p className="text-gray-600 mb-1 text-sm sm:text-base">
-              <span className="block sm:inline">Toca para seleccionar archivos</span>
-              <span className="hidden sm:inline"> o arrástralos aquí</span>
+            <p className={cn("mb-1 text-sm sm:text-base", disabled ? "text-gray-400" : "text-gray-600")}>
+              {disabled ? (
+                <span>Carga de archivos deshabilitada</span>
+              ) : (
+                <>
+                  <span className="block sm:inline">Toca para seleccionar archivos</span>
+                  <span className="hidden sm:inline"> o arrástralos aquí</span>
+                </>
+              )}
             </p>
-            <p className="text-xs text-gray-500">
+            <p className={cn("text-xs", disabled ? "text-gray-300" : "text-gray-500")}>
               Máximo {maxFiles} archivo{maxFiles > 1 ? 's' : ''}, hasta {Math.round(effectiveMaxSize / 1024 / 1024)}MB
             </p>
           </div>
@@ -115,13 +127,15 @@ export function FileUpload({
                   {(file.size / 1024 / 1024).toFixed(1)}MB
                 </span>
               </div>
-              <button
-                type="button"
-                onClick={() => removeFile(index)}
-                className="text-red-500 hover:text-red-700 p-1 -m-1 touch-manipulation active:scale-95"
-              >
-                <X className="w-4 h-4" />
-              </button>
+              {!disabled && (
+                <button
+                  type="button"
+                  onClick={() => removeFile(index)}
+                  className="text-red-500 hover:text-red-700 p-1 -m-1 touch-manipulation active:scale-95"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
             </div>
           ))}
         </div>
